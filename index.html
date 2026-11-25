@@ -1,0 +1,585 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#2b1a10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cigar Log">
+<meta name="description" content="Log cigars from your phone: brand, name, band and cigar photos, a personal 5-star rating, and your own tasting notes.">
+<title>Cigar Log</title>
+
+<style>
+  :root{
+    --bg:#1f140d; --bg2:#2a1a11; --panel:#2d1d13; --panel2:#352417;
+    --line:#4a3421; --line-soft:#3b2817;
+    --gold:#d9a441; --gold-dim:#b7872f; --gold-soft:#e7c074;
+    --text:#f4e9db; --muted:#b6a28b; --faint:#8a7761;
+    --danger:#c8583f; --radius:16px;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(120% 60% at 50% 0%,#33200f 0%,var(--bg) 55%);
+    color:var(--text);min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding-bottom:calc(96px + var(--safe-bottom));
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    position:sticky;top:0;z-index:20;
+    padding:calc(15px + var(--safe-top)) 18px 13px;
+    background:linear-gradient(180deg,#2a1a11 0%,#2a1a11f2 72%,#2a1a1100 100%);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .brandmark{display:flex;align-items:center;gap:10px}
+  .brandmark .mark{
+    width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+    background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+    box-shadow:inset 0 1px 1px #fff5,0 2px 6px #0006;
+  }
+  header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.3px}
+  header h1 small{display:block;font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.6px;margin-top:1px;text-transform:uppercase}
+  .tools{display:flex;align-items:center;gap:8px;position:relative}
+  .count-pill{font-size:12px;color:var(--gold);border:1px solid var(--gold-dim);padding:4px 10px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .icon-btn{background:none;border:1px solid var(--line);color:var(--text);border-radius:10px;width:38px;height:34px;font-size:17px;cursor:pointer}
+
+  main{padding:8px 16px 20px;max-width:680px;margin:0 auto}
+
+  .search-wrap{position:relative;margin:4px 0 16px}
+  .search-wrap input{width:100%;padding:12px 14px 12px 42px;border-radius:12px;border:1px solid var(--line);background:#241610;color:var(--text);font-size:16px}
+  .search-wrap input:focus{outline:2px solid var(--gold-dim);outline-offset:0}
+  .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
+
+  .grid{display:flex;flex-direction:column;gap:12px}
+  .card{display:flex;gap:14px;padding:12px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line-soft);align-items:center;cursor:pointer;transition:transform .08s,border-color .15s}
+  .card:active{transform:scale(.985)}
+  .card .thumb{width:72px;height:72px;border-radius:12px;flex:0 0 auto;background:#190e07 center/cover no-repeat;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;color:#5a4028;overflow:hidden}
+  .card .info{flex:1;min-width:0}
+  .card .info .brand{font-size:12px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .info .name{font-size:17px;font-weight:600;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .stars{font-size:14px;color:var(--gold);letter-spacing:1.5px}
+  .card .stars .off{color:#54412a}
+  .card .norate{font-size:13px;color:var(--faint)}
+
+  .empty{text-align:center;color:var(--muted);padding:64px 22px}
+  .empty .big{font-size:54px;margin-bottom:12px}
+  .empty p{margin:7px 0;line-height:1.55}
+
+  .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + var(--safe-bottom));z-index:30;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;border:none;border-radius:999px;padding:15px 28px;font-size:16px;font-weight:700;box-shadow:0 10px 26px #0009;display:flex;align-items:center;gap:8px;cursor:pointer}
+  .fab:active{filter:brightness(.95)}
+
+  .overlay{position:fixed;inset:0;z-index:50;background:#000d;display:none;overflow-y:auto}
+  .overlay.open{display:block}
+  .sheet{background:var(--bg2);min-height:100%;max-width:680px;margin:0 auto;padding:calc(14px + var(--safe-top)) 18px calc(34px + var(--safe-bottom))}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:sticky;top:0;background:var(--bg2);padding:8px 0 10px;z-index:5}
+  .sheet-head h2{margin:0;font-size:18px}
+  .link-btn{background:none;border:none;color:var(--gold);font-size:16px;font-weight:600;cursor:pointer;padding:6px}
+  .link-btn.muted{color:var(--muted)}
+
+  .photo-row{display:flex;gap:12px;margin-bottom:18px}
+  .photo-slot{flex:1;aspect-ratio:1/1;border-radius:var(--radius);background:#190e07;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;overflow:hidden;position:relative}
+  .photo-slot img{width:100%;height:100%;object-fit:cover}
+  .photo-slot .ph-icon{font-size:30px;margin-bottom:6px}
+  .photo-slot .ph-label{font-size:12.5px;font-weight:600;text-align:center;padding:0 8px}
+  .photo-slot .tag{position:absolute;top:7px;left:7px;background:#000000b0;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:6px;backdrop-filter:blur(3px)}
+  .photo-slot .clear{position:absolute;top:6px;right:6px;background:#000000b0;color:#fff;border:none;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .field input,.field textarea{width:100%;padding:13px;border-radius:11px;border:1px solid var(--line);background:#241610;color:var(--text);font-size:16px;font-family:inherit}
+  .field input:focus,.field textarea:focus{outline:2px solid var(--gold-dim)}
+  .field textarea{min-height:110px;resize:vertical;line-height:1.5}
+  .row{display:flex;gap:12px}
+  .row .field{flex:1}
+
+  .stars-input{display:flex;gap:8px;font-size:36px;color:#4a3421;user-select:none}
+  .stars-input span{cursor:pointer;transition:transform .1s,color .1s}
+  .stars-input span.on{color:var(--gold)}
+  .stars-input span:active{transform:scale(1.25)}
+  .rate-hint{font-size:12.5px;color:var(--faint);margin-top:6px}
+
+  .save-btn{width:100%;padding:16px;border:none;border-radius:13px;font-size:17px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer;margin-top:10px}
+  .save-btn:active{filter:brightness(.95)}
+  .delete-btn{width:100%;padding:14px;border:1px solid var(--danger);border-radius:13px;font-size:15px;font-weight:600;background:transparent;color:var(--danger);cursor:pointer;margin-top:14px}
+
+  .detail-photos{display:flex;gap:12px;margin-bottom:18px}
+  .detail-photos figure{flex:1;margin:0}
+  .detail-photos .frame{width:100%;aspect-ratio:1/1;border-radius:var(--radius);background:#190e07;border:1px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center;color:#5a4028;font-size:30px}
+  .detail-photos img{width:100%;height:100%;object-fit:cover;display:block}
+  .detail-photos figcaption{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-top:6px;font-weight:600}
+  .detail-brand{color:var(--gold);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+  .detail-name{font-size:27px;font-weight:700;margin:3px 0 8px;line-height:1.15;text-wrap:balance}
+  .detail-stars{font-size:22px;color:var(--gold);letter-spacing:3px;margin-bottom:18px}
+  .detail-stars .off{color:#54412a}
+  .notes-block{background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;padding:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .notes-block .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:block;font-weight:600}
+  .detail-date{font-size:12.5px;color:var(--faint);margin-top:16px}
+
+  .menu-pop{position:absolute;right:0;top:44px;z-index:40;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px;display:none;min-width:220px;box-shadow:0 12px 32px #000a}
+  .menu-pop.open{display:block}
+  .menu-pop button{display:flex;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:12px;font-size:15px;border-radius:8px;cursor:pointer;gap:11px;align-items:center}
+  .menu-pop button:active{background:#ffffff12}
+  .menu-pop hr{border:none;border-top:1px solid var(--line);margin:4px 2px}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-bottom));z-index:80;background:#140d07;border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;box-shadow:0 6px 20px #0008}
+  .toast.show{opacity:1}
+  input[type=file]{display:none}
+</style>
+
+<header>
+  <div class="brandmark">
+    <div class="mark">🚬</div>
+    <h1>Cigar Log<small>Your pocket humidor</small></h1>
+  </div>
+  <div class="tools">
+    <span class="count-pill" id="countPill">0</span>
+    <button class="icon-btn" id="menuBtn" aria-label="Menu">⋮</button>
+    <div class="menu-pop" id="menuPop">
+      <button id="exportBtn">⬇️ Export / backup</button>
+      <button id="importBtn">⬆️ Import backup</button>
+      <hr>
+      <button id="installBtn">📲 Add to Home Screen</button>
+      <button id="aboutBtn">ℹ️ About this app</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="search-wrap">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="search" type="search" placeholder="Search brand, name, or notes…" autocomplete="off">
+  </div>
+  <div class="grid" id="list"></div>
+</main>
+
+<button class="fab" id="addBtn">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Add Cigar
+</button>
+
+<!-- Editor -->
+<div class="overlay" id="editorOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="link-btn muted" id="editCancel">Cancel</button>
+      <h2 id="editTitle">Add Cigar</h2>
+      <span style="width:56px"></span>
+    </div>
+
+    <div class="photo-row">
+      <div class="photo-slot" id="slotBand">
+        <span class="tag">Band</span>
+        <div class="ph-icon">📷</div>
+        <div class="ph-label">Photograph the band</div>
+      </div>
+      <div class="photo-slot" id="slotCigar">
+        <span class="tag">Cigar</span>
+        <div class="ph-icon">📷</div>
+        <div class="ph-label">Photograph the cigar</div>
+      </div>
+    </div>
+    <input type="file" id="fileBand" accept="image/*" capture="environment">
+    <input type="file" id="fileCigar" accept="image/*" capture="environment">
+
+    <div class="row">
+      <div class="field"><label>Brand</label><input id="f_brand" placeholder="e.g. Padrón" autocomplete="off"></div>
+      <div class="field"><label>Name</label><input id="f_name" placeholder="e.g. 1964 Anniversary" autocomplete="off"></div>
+    </div>
+
+    <div class="field">
+      <label>Your rating</label>
+      <div class="stars-input" id="starsInput">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+      <div class="rate-hint" id="rateHint">Tap to rate — tap the same star again to clear</div>
+    </div>
+
+    <div class="field"><label>Personal notes</label><textarea id="f_notes" placeholder="Flavors, draw, burn, pairing, where and when you smoked it…"></textarea></div>
+
+    <button class="save-btn" id="saveBtn">Save Cigar</button>
+    <button class="delete-btn" id="deleteBtn" style="display:none">Delete this cigar</button>
+  </div>
+</div>
+
+<!-- Detail -->
+<div class="overlay" id="detailOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="link-btn muted" id="detailClose">‹ Back</button>
+      <h2></h2>
+      <button class="link-btn" id="detailEdit">Edit</button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<input type="file" id="importInput" accept="application/json,.json">
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = s => document.querySelector(s);
+  const DB_NAME = "cigarlog", STORE = "cigars", DB_VER = 1;
+
+  let cigars = [];          // in-memory cache of records
+  let editingId = null;
+  let photoBand = null, photoCigar = null;   // Blobs (or null)
+  let currentRating = 0;
+  const urlCache = new Map();  // id/field -> objectURL for cleanup
+
+  /* ---------------- IndexedDB ---------------- */
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains(STORE)){
+          db.createObjectStore(STORE, {keyPath:"id"});
+        }
+      };
+      req.onsuccess = ()=>resolve(req.result);
+      req.onerror = ()=>reject(req.error);
+    });
+  }
+  async function dbAll(){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(STORE,"readonly");
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = ()=>resolve(req.result||[]);
+      req.onerror = ()=>reject(req.error);
+    });
+  }
+  async function dbPut(rec){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).put(rec);
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>reject(tx.error);
+    });
+  }
+  async function dbDelete(id){
+    const db = await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx = db.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete = ()=>resolve();
+      tx.onerror = ()=>reject(tx.error);
+    });
+  }
+
+  function uid(){ return "c"+Date.now().toString(36)+Math.floor(Math.random()*1e5).toString(36); }
+  function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function stars(n){ n=+n||0; let h=""; for(let i=1;i<=5;i++) h+=`<span class="${i<=n?"":"off"}">★</span>`; return h; }
+
+  function objURL(blob, key){
+    if(!blob) return "";
+    if(urlCache.has(key)) return urlCache.get(key);
+    const u = URL.createObjectURL(blob);
+    urlCache.set(key, u);
+    return u;
+  }
+  function freeURLs(){ urlCache.forEach(u=>URL.revokeObjectURL(u)); urlCache.clear(); }
+
+  /* ---------------- Image processing ---------------- */
+  function processImage(file){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const img = new Image();
+        img.onload = ()=>{
+          const maxDim = 1100;
+          let {width,height} = img;
+          const scale = Math.min(1, maxDim/Math.max(width,height));
+          width = Math.round(width*scale); height = Math.round(height*scale);
+          const cv = document.createElement("canvas");
+          cv.width=width; cv.height=height;
+          cv.getContext("2d").drawImage(img,0,0,width,height);
+          cv.toBlob(b=> b?resolve(b):reject(new Error("encode")), "image/jpeg", 0.7);
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ---------------- List ---------------- */
+  function render(){
+    const q = $("#search").value.trim().toLowerCase();
+    let items = cigars.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
+    if(q){
+      items = items.filter(c => ((c.brand||"")+" "+(c.name||"")+" "+(c.notes||"")).toLowerCase().includes(q));
+    }
+    $("#countPill").textContent = cigars.length;
+
+    const list = $("#list");
+    if(!items.length){
+      list.innerHTML = `<div class="empty">
+        <div class="big">🚬</div>
+        ${cigars.length
+          ? "<p>No cigars match that search.</p>"
+          : "<p><b>No cigars logged yet.</b></p><p>Tap <b>Add Cigar</b> to snap the band and the cigar, rate it, and jot your notes.</p>"}
+      </div>`;
+      return;
+    }
+    list.innerHTML = items.map(c=>{
+      const thumbBlob = c.band || c.cigar;
+      const thumb = thumbBlob
+        ? `<div class="thumb" style="background-image:url('${objURL(thumbBlob, c.id+":thumb")}')"></div>`
+        : `<div class="thumb">🚬</div>`;
+      return `<div class="card" data-id="${c.id}">
+        ${thumb}
+        <div class="info">
+          <div class="brand">${esc(c.brand)||"&nbsp;"}</div>
+          <div class="name">${esc(c.name)||"Unnamed cigar"}</div>
+          ${c.rating?`<div class="stars">${stars(c.rating)}</div>`:`<div class="norate">Not rated</div>`}
+        </div>
+      </div>`;
+    }).join("");
+    list.querySelectorAll(".card").forEach(el=>el.addEventListener("click",()=>openDetail(el.dataset.id)));
+  }
+
+  /* ---------------- Editor ---------------- */
+  function openEditor(id){
+    editingId = id || null;
+    const c = id ? cigars.find(x=>x.id===id) : null;
+    $("#editTitle").textContent = c ? "Edit Cigar" : "Add Cigar";
+    $("#deleteBtn").style.display = c ? "block" : "none";
+
+    photoBand  = c ? (c.band||null)  : null;
+    photoCigar = c ? (c.cigar||null) : null;
+    currentRating = c ? (c.rating||0) : 0;
+
+    paintSlot("slotBand","Band",photoBand,"band");
+    paintSlot("slotCigar","Cigar",photoCigar,"cigar");
+    setStars(currentRating);
+
+    $("#f_brand").value = c ? c.brand||"" : "";
+    $("#f_name").value  = c ? c.name||""  : "";
+    $("#f_notes").value = c ? c.notes||"" : "";
+
+    $("#detailOverlay").classList.remove("open");
+    const ov = $("#editorOverlay"); ov.classList.add("open"); ov.scrollTop = 0;
+  }
+  function closeEditor(){ $("#editorOverlay").classList.remove("open"); editingId=null; }
+
+  function paintSlot(slotId,label,blob,which){
+    const slot = $("#"+slotId);
+    if(blob){
+      slot.innerHTML = `<span class="tag">${label}</span>
+        <button class="clear" data-which="${which}" aria-label="Remove">✕</button>
+        <img src="${objURL(blob, "edit:"+which)}" alt="${label} photo">`;
+      slot.querySelector(".clear").addEventListener("click",e=>{
+        e.stopPropagation();
+        if(which==="band") photoBand=null; else photoCigar=null;
+        urlCache.delete("edit:"+which);
+        paintSlot(slotId,label,null,which);
+      });
+    }else{
+      slot.innerHTML = `<span class="tag">${label}</span>
+        <div class="ph-icon">📷</div><div class="ph-label">Photograph the ${which}</div>`;
+    }
+  }
+  function setStars(n){
+    currentRating = n;
+    $("#starsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n));
+    $("#rateHint").textContent = n ? `${n} of 5 stars` : "Tap to rate — tap the same star again to clear";
+  }
+
+  async function handleFile(which, file){
+    if(!file) return;
+    toast("Processing photo…");
+    try{
+      const blob = await processImage(file);
+      if(which==="band"){ photoBand=blob; paintSlot("slotBand","Band",blob,"band"); }
+      else { photoCigar=blob; paintSlot("slotCigar","Cigar",blob,"cigar"); }
+      toast("Photo added");
+    }catch(e){ toast("Couldn't load that image"); }
+  }
+
+  async function saveCigar(){
+    const brand = $("#f_brand").value.trim();
+    const name  = $("#f_name").value.trim();
+    const notes = $("#f_notes").value.trim();
+    if(!brand && !name && !notes && !photoBand && !photoCigar){
+      toast("Add a photo or some details first"); return;
+    }
+    const base = editingId ? cigars.find(x=>x.id===editingId) : null;
+    const rec = {
+      id: editingId || uid(),
+      brand, name, notes,
+      rating: currentRating,
+      band: photoBand, cigar: photoCigar,
+      created: base ? base.created : Date.now(),
+      updated: Date.now()
+    };
+    try{
+      await dbPut(rec);
+    }catch(e){ toast("Couldn't save — storage error"); return; }
+    const i = cigars.findIndex(x=>x.id===rec.id);
+    if(i>-1) cigars[i]=rec; else cigars.push(rec);
+    // invalidate cached thumb url
+    [rec.id+":thumb","edit:band","edit:cigar"].forEach(k=>{
+      if(urlCache.has(k)){ URL.revokeObjectURL(urlCache.get(k)); urlCache.delete(k); }
+    });
+    render();
+    closeEditor();
+    toast("Saved ✓");
+  }
+
+  async function deleteCigar(){
+    if(!editingId) return;
+    if(!confirm("Delete this cigar from your log?")) return;
+    try{ await dbDelete(editingId); }catch(e){ toast("Couldn't delete"); return; }
+    cigars = cigars.filter(x=>x.id!==editingId);
+    render(); closeEditor(); toast("Deleted");
+  }
+
+  /* ---------------- Detail ---------------- */
+  function openDetail(id){
+    const c = cigars.find(x=>x.id===id);
+    if(!c) return;
+    editingId = id;
+    const frame = (blob,which,label)=>`<figure>
+      <div class="frame">${blob?`<img src="${objURL(blob,id+":d"+which)}" alt="${label}">`:"🚬"}</div>
+      <figcaption>${label}</figcaption></figure>`;
+    const d = c.created ? new Date(c.created) : null;
+    $("#detailBody").innerHTML = `
+      <div class="detail-photos">
+        ${frame(c.band,"b","Band")}
+        ${frame(c.cigar,"c","Cigar")}
+      </div>
+      <div class="detail-brand">${esc(c.brand)||""}</div>
+      <div class="detail-name">${esc(c.name)||"Unnamed cigar"}</div>
+      <div class="detail-stars">${c.rating?stars(c.rating):'<span style="font-size:14px;color:var(--faint);letter-spacing:0">Not rated</span>'}</div>
+      ${c.notes?`<div class="notes-block"><span class="k">Personal notes</span>${esc(c.notes)}</div>`:`<div class="notes-block" style="color:var(--faint)">No notes yet.</div>`}
+      ${d?`<div class="detail-date">Logged ${d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</div>`:""}
+    `;
+    const ov = $("#detailOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+  }
+  function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
+
+  /* ---------------- Backup / Restore ---------------- */
+  function blobToDataURL(blob){
+    return new Promise(res=>{ if(!blob) return res(null); const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(blob); });
+  }
+  function dataURLToBlob(dataURL){
+    if(!dataURL) return null;
+    const [head,b64] = dataURL.split(",");
+    const mime = (head.match(/:(.*?);/)||[])[1] || "image/jpeg";
+    const bin = atob(b64); const arr = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    return new Blob([arr],{type:mime});
+  }
+  async function exportData(){
+    toast("Preparing backup…");
+    const out = [];
+    for(const c of cigars){
+      out.push({
+        id:c.id, brand:c.brand, name:c.name, notes:c.notes, rating:c.rating,
+        created:c.created, updated:c.updated,
+        band: await blobToDataURL(c.band),
+        cigar: await blobToDataURL(c.cigar)
+      });
+    }
+    const json = JSON.stringify({app:"Cigar Log",version:1,exported:new Date().toISOString(),cigars:out});
+    const filename = "cigar-log-backup-"+new Date().toISOString().slice(0,10)+".json";
+
+    if(window.claude && typeof window.claude.use==="function"){
+      try{
+        const dl = await window.claude.use("downloads");
+        if(dl){ await dl.save({filename, data:json}); toast("Backup saved"); return; }
+      }catch(err){ if(err && err.code==="declined") return; }
+    }
+    const url = URL.createObjectURL(new Blob([json],{type:"application/json"}));
+    const a = document.createElement("a"); a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    toast("Backup downloaded");
+  }
+  function importData(file){
+    const r = new FileReader();
+    r.onload = async ()=>{
+      try{
+        const obj = JSON.parse(r.result);
+        const incoming = Array.isArray(obj)?obj:obj.cigars;
+        if(!Array.isArray(incoming)) throw 0;
+        const existing = new Set(cigars.map(c=>c.id));
+        let added=0;
+        for(const c of incoming){
+          const id = c.id || uid();
+          if(existing.has(id)) continue;
+          const rec = {
+            id, brand:c.brand||"", name:c.name||"", notes:c.notes||"",
+            rating:c.rating||0, created:c.created||Date.now(), updated:c.updated||Date.now(),
+            band: dataURLToBlob(c.band), cigar: dataURLToBlob(c.cigar)
+          };
+          await dbPut(rec); cigars.push(rec); existing.add(id); added++;
+        }
+        render();
+        toast(added?`Imported ${added} cigars`:"Already up to date");
+      }catch(e){ toast("That file didn't look right"); }
+    };
+    r.readAsText(file);
+  }
+
+  /* ---------------- Misc UI ---------------- */
+  let toastT;
+  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1900); }
+
+  const isiOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+  function installHelp(){
+    alert(isiOS
+      ? "To install on iPhone:\n\n1. Tap the Share button (□↑) at the bottom of Safari.\n2. Choose “Add to Home Screen.”\n\nIt will open like a normal app, and your cigars stay saved on this phone."
+      : "To install on Android:\n\n1. Tap the ⋮ menu in Chrome.\n2. Choose “Add to Home screen” / “Install app.”\n\nIt will open like a normal app, and your cigars stay saved on this phone.");
+  }
+  function about(){
+    alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYour cigars are saved privately on THIS device — there’s no account and nothing is uploaded. Use the ⋮ menu to export a backup you can move to another phone.");
+  }
+
+  /* ---------------- Wire up ---------------- */
+  $("#addBtn").addEventListener("click",()=>openEditor(null));
+  $("#editCancel").addEventListener("click",closeEditor);
+  $("#saveBtn").addEventListener("click",saveCigar);
+  $("#deleteBtn").addEventListener("click",deleteCigar);
+  $("#detailClose").addEventListener("click",closeDetail);
+  $("#detailEdit").addEventListener("click",()=>openEditor(editingId));
+  $("#search").addEventListener("input",render);
+
+  $("#slotBand").addEventListener("click",e=>{ if(e.target.closest(".clear"))return; $("#fileBand").click(); });
+  $("#slotCigar").addEventListener("click",e=>{ if(e.target.closest(".clear"))return; $("#fileCigar").click(); });
+  $("#fileBand").addEventListener("change",e=>{ handleFile("band",e.target.files[0]); e.target.value=""; });
+  $("#fileCigar").addEventListener("change",e=>{ handleFile("cigar",e.target.files[0]); e.target.value=""; });
+
+  $("#starsInput").querySelectorAll("span").forEach(s=>{
+    s.addEventListener("click",()=>{ const v=+s.dataset.v; setStars(v===currentRating? v-1 : v); });
+  });
+
+  const menuPop = $("#menuPop");
+  $("#menuBtn").addEventListener("click",e=>{ e.stopPropagation(); menuPop.classList.toggle("open"); });
+  document.addEventListener("click",()=>menuPop.classList.remove("open"));
+  menuPop.addEventListener("click",e=>e.stopPropagation());
+  $("#exportBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); exportData(); });
+  $("#importBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); $("#importInput").click(); });
+  $("#installBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); installHelp(); });
+  $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
+  $("#importInput").addEventListener("change",e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=""; });
+
+  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeEditor(); closeDetail(); } });
+  window.addEventListener("pagehide", freeURLs);
+
+  /* ---------------- Boot ---------------- */
+  (async function init(){
+    try{ cigars = await dbAll(); }
+    catch(e){ cigars = []; toast("Storage unavailable on this browser"); }
+    render();
+  })();
+})();
+</script>
