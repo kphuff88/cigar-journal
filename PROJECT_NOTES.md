@@ -64,6 +64,11 @@ _Last updated: 2026-11-25_
 
 > A camera "Shop Check" (read a band and auto-match it to your collection) was tried
 > and removed — the text recognition wasn't reliable enough on real cigar bands.
+7. **Cigar Shops directory (shared):** any signed-in user can add a shop (name, address,
+   notes, location), and a **"Near me"** search lists shops by distance with map
+   directions. Opened with the **📍** button in the top bar. Ratings are now **1–10
+   stars**, color-coded (red 1–3, orange 4–5, yellow 6–8, green 9–10).
+   _Setup: run **supabase-shops.sql** in Supabase once (see to-do)._
 
 ---
 
@@ -79,7 +84,8 @@ from any device.
 
 - [ ] **Run the database setup** in Supabase (file: `supabase-setup.sql`). _See how-to below._
 - [ ] **Turn OFF email confirmation** in Supabase so username logins work. _See how-to below._
-- [ ] Test: create an account on the live app and add a cigar.
+- [x] Test: create an account on the live app and add a cigar.
+- [ ] **Run `supabase-shops.sql`** in Supabase → SQL Editor (creates the shared Cigar Shops directory). Until then, the 📍 Shops screen will say "Almost ready".
 
 ---
 

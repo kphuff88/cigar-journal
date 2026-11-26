@@ -157,6 +157,25 @@
   .crop-controls input[type=range]{flex:1;accent-color:var(--gold)}
   .crop-zi{color:var(--muted);font-size:22px;width:18px;text-align:center;user-select:none}
   .crop-hint{text-align:center;color:var(--faint);font-size:12.5px;padding:2px 16px calc(18px + var(--safe-bottom))}
+
+  /* Cigar shops */
+  .shop-controls{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+  .shop-controls .search-wrap{flex:1;margin:0}
+  .nearme-btn{flex:0 0 auto;background:#2a1a10;border:1px solid var(--gold-dim);color:var(--gold-soft);border-radius:12px;padding:12px 14px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .nearme-btn:active{filter:brightness(1.12)}
+  .nearme-btn:disabled{opacity:.6}
+  .loc-btn{width:100%;padding:13px;border-radius:12px;border:1px solid var(--gold-dim);background:#2a1a10;color:var(--gold-soft);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+  .loc-btn:disabled{opacity:.6}
+  .loc-status{font-size:13px;color:var(--faint);margin-bottom:14px;min-height:16px}
+  .loc-status.ok{color:var(--green)}
+  .shop-card{display:flex;flex-direction:column;padding:14px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line-soft)}
+  .shop-card .sname{font-size:17px;font-weight:600}
+  .shop-card .saddr{font-size:13.5px;color:var(--muted);margin-top:2px}
+  .shop-card .shop-note{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45;white-space:pre-wrap}
+  .shop-card .srow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+  .shop-card .sdist{font-size:12.5px;color:var(--gold);font-weight:700;white-space:nowrap}
+  .shop-card .sactions{display:flex;gap:16px}
+  .shop-card .sactions a,.shop-card .sactions button{font-size:13.5px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;font-weight:600;text-decoration:none}
 </style>
 
 <header>
@@ -166,6 +185,7 @@
   </div>
   <div class="tools">
     <span class="count-pill" id="countPill">0</span>
+    <button class="icon-btn" id="shopsBtn" aria-label="Cigar shops" title="Cigar shops">📍</button>
     <button class="icon-btn" id="menuBtn" aria-label="Menu">⋮</button>
     <div class="menu-pop" id="menuPop">
       <div class="menu-user" id="menuUser"></div>
@@ -271,6 +291,44 @@
   </div>
 </div>
 
+<!-- Cigar shops -->
+<div class="overlay" id="shopsOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="link-btn muted" id="shopsClose">‹ Back</button>
+      <h2>Cigar Shops</h2>
+      <button class="link-btn" id="shopAddBtn">+ Add</button>
+    </div>
+    <div class="shop-controls">
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="shopSearch" type="search" placeholder="Search shop or city…" autocomplete="off">
+      </div>
+      <button class="nearme-btn" id="nearMeBtn">📍 Near me</button>
+    </div>
+    <div class="grid" id="shopList"></div>
+  </div>
+</div>
+
+<!-- Add / edit shop -->
+<div class="overlay" id="shopFormOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="link-btn muted" id="shopFormCancel">Cancel</button>
+      <h2 id="shopFormTitle">Add Shop</h2>
+      <span style="width:56px"></span>
+    </div>
+    <div class="field"><label>Shop name</label><input id="s_name" placeholder="e.g. Ohio Cigar Co." autocomplete="off"></div>
+    <div class="field"><label>Address</label><input id="s_address" placeholder="Street address" autocomplete="off"></div>
+    <div class="field"><label>City / State</label><input id="s_city" placeholder="e.g. Columbus, OH" autocomplete="off"></div>
+    <div class="field"><label>Notes</label><textarea id="s_notes" placeholder="Lounge? Walk-in humidor? Hours? Great selection?"></textarea></div>
+    <button class="loc-btn" id="s_locBtn">📍 Use my current location</button>
+    <div class="loc-status" id="s_locStatus"></div>
+    <button class="save-btn" id="shopSave">Save Shop</button>
+    <button class="delete-btn" id="shopDelete" style="display:none">Delete this shop</button>
+  </div>
+</div>
+
 <!-- Photo cropper -->
 <div class="overlay cropper" id="cropOverlay">
   <div class="crop-head">
@@ -319,6 +377,7 @@
   let currentRating = 0;
   let authMode = "login";
   const photoURLs = new Map();   // storage path -> objectURL
+  let shops = [], myLoc = null, shopEditingId = null, shopLoc = null;
 
   const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   function ratingColor(n){ n=+n||0; if(n<=0) return null; if(n<=3) return "#d8463a"; if(n<=5) return "#e08a2e"; if(n<=8) return "#e3c23c"; return "#5faa4e"; }
@@ -710,6 +769,141 @@
   }
   function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
 
+  // ---- Cigar shops (shared directory) ----
+  function haversineMi(a,b){
+    const R=3958.8, toR=x=>x*Math.PI/180;
+    const dLat=toR(b.lat-a.lat), dLng=toR(b.lng-a.lng);
+    const s=Math.sin(dLat/2)**2 + Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(s));
+  }
+  function getLocation(){
+    return new Promise((res,rej)=>{
+      if(!navigator.geolocation) return rej(new Error("no geo"));
+      navigator.geolocation.getCurrentPosition(
+        p=>res({lat:p.coords.latitude,lng:p.coords.longitude}),
+        err=>rej(err),
+        {enableHighAccuracy:true, timeout:12000, maximumAge:60000}
+      );
+    });
+  }
+  function mapsUrl(s){
+    if(s.lat!=null && s.lng!=null) return `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`;
+    const q=encodeURIComponent([s.name,s.address,s.city].filter(Boolean).join(" "));
+    return `https://www.google.com/maps/search/?api=1&query=${q}`;
+  }
+  async function openShops(){
+    if(!session){ $("#gateOverlay").classList.add("open"); return; }
+    $("#shopSearch").value="";
+    const ov=$("#shopsOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+    await loadShops();
+  }
+  function closeShops(){ $("#shopsOverlay").classList.remove("open"); }
+  async function loadShops(){
+    $("#shopList").innerHTML=`<div class="loading"><div class="spinner"></div>Loading shops…</div>`;
+    try{
+      const { data, error } = await withTimeout(sb.from("shops").select("*"), 15000);
+      if(error){
+        if(/relation .*shops.* does not exist|schema cache|not find the table/i.test(error.message)){
+          $("#shopList").innerHTML=`<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The shops directory still needs its one-time setup in Supabase. Run the <b>supabase-shops.sql</b> file, then reopen this screen.</p></div>`;
+        }else{
+          $("#shopList").innerHTML=`<div class="empty"><div class="big">⚠️</div><p>Couldn't load shops.</p><p>${esc(error.message)}</p></div>`;
+        }
+        return;
+      }
+      shops=data||[]; renderShops();
+    }catch(e){ $("#shopList").innerHTML=`<div class="empty"><div class="big">📡</div><p>Couldn't reach the server.</p></div>`; }
+  }
+  function renderShops(){
+    const q=$("#shopSearch").value.trim().toLowerCase();
+    let items=shops.slice();
+    if(q) items=items.filter(s=>((s.name||"")+" "+(s.address||"")+" "+(s.city||"")).toLowerCase().includes(q));
+    if(myLoc){
+      items.forEach(s=>{ s._dist=(s.lat!=null&&s.lng!=null)?haversineMi(myLoc,{lat:s.lat,lng:s.lng}):Infinity; });
+      items.sort((a,b)=>a._dist-b._dist);
+    }else{
+      items.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    }
+    const list=$("#shopList");
+    if(!items.length){
+      list.innerHTML=`<div class="empty"><div class="big">🏬</div>${shops.length?"<p>No shops match that search.</p>":"<p><b>No shops added yet.</b></p><p>Tap <b>+ Add</b> to add the first cigar shop.</p>"}</div>`;
+      return;
+    }
+    list.innerHTML=items.map(s=>{
+      const addr=[s.address,s.city].filter(Boolean).join(", ");
+      const dist=(myLoc && s._dist!=null && s._dist!==Infinity)?`<span class="sdist">${s._dist<0.1?"you're here":s._dist.toFixed(1)+" mi"}</span>`:"";
+      const mine=s.created_by===session.user.id;
+      return `<div class="shop-card">
+        <div class="sname">${esc(s.name)}</div>
+        ${addr?`<div class="saddr">${esc(addr)}</div>`:""}
+        ${s.notes?`<div class="shop-note">${esc(s.notes)}</div>`:""}
+        <div class="srow">
+          <div class="sactions">
+            <a href="${mapsUrl(s)}" target="_blank" rel="noopener noreferrer">Directions ›</a>
+            ${mine?`<button data-edit="${esc(s.id)}">Edit</button>`:""}
+          </div>
+          ${dist}
+        </div>
+      </div>`;
+    }).join("");
+    list.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>openShopForm(b.getAttribute("data-edit"))));
+  }
+  async function nearMe(){
+    const btn=$("#nearMeBtn"), prev=btn.textContent; btn.textContent="Locating…"; btn.disabled=true;
+    try{ myLoc=await getLocation(); renderShops(); toast("Sorted by distance"); }
+    catch(e){ toast("Couldn't get your location — allow location access and retry"); }
+    finally{ btn.textContent=prev; btn.disabled=false; }
+  }
+  function setLocStatus(msg,ok){ const el=$("#s_locStatus"); el.textContent=msg; el.classList.toggle("ok",!!ok); }
+  function openShopForm(id){
+    shopEditingId=id||null;
+    const s=id?shops.find(x=>x.id===id):null;
+    $("#shopFormTitle").textContent=s?"Edit Shop":"Add Shop";
+    $("#shopDelete").style.display=s?"block":"none";
+    $("#s_name").value=s?s.name||"":"";
+    $("#s_address").value=s?s.address||"":"";
+    $("#s_city").value=s?s.city||"":"";
+    $("#s_notes").value=s?s.notes||"":"";
+    shopLoc = (s && s.lat!=null) ? {lat:s.lat,lng:s.lng} : null;
+    setLocStatus(shopLoc?"Location saved ✓":"", !!shopLoc);
+    const ov=$("#shopFormOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+  }
+  function closeShopForm(){ $("#shopFormOverlay").classList.remove("open"); shopEditingId=null; }
+  async function useCurrentLoc(){
+    const btn=$("#s_locBtn"), prev=btn.textContent; btn.textContent="Getting location…"; btn.disabled=true;
+    try{ shopLoc=await getLocation(); setLocStatus("Location captured ✓",true); }
+    catch(e){ setLocStatus("Couldn't get location — you can still save with the address.",false); }
+    finally{ btn.textContent=prev; btn.disabled=false; }
+  }
+  async function geocode(query){
+    try{
+      const r=await withTimeout(fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,{headers:{Accept:"application/json"}}),8000);
+      const j=await r.json();
+      if(j && j[0]) return {lat:parseFloat(j[0].lat), lng:parseFloat(j[0].lon)};
+    }catch(e){}
+    return null;
+  }
+  async function saveShop(){
+    const name=$("#s_name").value.trim();
+    if(!name){ toast("Enter a shop name"); return; }
+    const address=$("#s_address").value.trim(), city=$("#s_city").value.trim(), notes=$("#s_notes").value.trim();
+    const btn=$("#shopSave"); btn.disabled=true; btn.textContent="Saving…";
+    try{
+      let loc=shopLoc;
+      if(!loc && (address||city)){ setLocStatus("Looking up address…",false); loc=await geocode([name,address,city].filter(Boolean).join(", ")); if(loc) setLocStatus("Found the address ✓",true); }
+      const row={ name, address, city, notes, lat:loc?loc.lat:null, lng:loc?loc.lng:null, created_by:session.user.id };
+      if(shopEditingId){ const { error }=await sb.from("shops").update(row).eq("id",shopEditingId); if(error) throw error; }
+      else { const { error }=await sb.from("shops").insert(row); if(error) throw error; }
+      closeShopForm(); await loadShops(); toast("Shop saved ✓");
+    }catch(err){ toast((err&&err.message)||"Couldn't save shop"); }
+    finally{ btn.disabled=false; btn.textContent="Save Shop"; }
+  }
+  async function deleteShop(){
+    if(!shopEditingId) return;
+    if(!confirm("Delete this shop from the directory?")) return;
+    try{ const { error }=await sb.from("shops").delete().eq("id",shopEditingId); if(error) throw error; closeShopForm(); await loadShops(); toast("Shop deleted"); }
+    catch(err){ toast((err&&err.message)||"Couldn't delete"); }
+  }
+
   function about(){
     alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYou sign in with your email and a password. Your cigars, ratings, notes and photos are saved to your private cloud space, so they appear on any device you log in on. Only you can see your cigars.");
   }
@@ -724,6 +918,15 @@
   $("#authUser").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#authPass").focus(); });
 
   $("#addBtn").addEventListener("click",()=>{ if(!session){ $("#gateOverlay").classList.add("open"); return; } openEditor(null); });
+  $("#shopsBtn").addEventListener("click",openShops);
+  $("#shopsClose").addEventListener("click",closeShops);
+  $("#shopAddBtn").addEventListener("click",()=>openShopForm(null));
+  $("#shopFormCancel").addEventListener("click",closeShopForm);
+  $("#shopSave").addEventListener("click",saveShop);
+  $("#shopDelete").addEventListener("click",deleteShop);
+  $("#s_locBtn").addEventListener("click",useCurrentLoc);
+  $("#nearMeBtn").addEventListener("click",nearMe);
+  $("#shopSearch").addEventListener("input",renderShops);
   $("#editCancel").addEventListener("click",closeEditor);
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
@@ -771,7 +974,7 @@
   $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
   $("#logoutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); logout(); });
 
-  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeEditor(); closeDetail(); } });
+  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeShopForm(); closeShops(); closeEditor(); closeDetail(); } });
   window.addEventListener("pagehide",freePhotoURLs);
 
   /* ---------------- Boot ---------------- */
