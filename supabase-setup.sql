@@ -12,6 +12,7 @@ create table if not exists public.cigars (
   name        text default '',
   rating      int2 default 0,
   profile     int2 default 0,
+  price       int2 default 0,
   origin      text default '',
   wrapper     text default '',
   binder      text default '',
@@ -27,6 +28,7 @@ create index if not exists cigars_user_idx on public.cigars(user_id);
 
 -- 1a. Add newer columns to an existing table (safe if they already exist)
 alter table public.cigars add column if not exists profile int2 default 0;
+alter table public.cigars add column if not exists price   int2 default 0;
 alter table public.cigars add column if not exists origin  text default '';
 alter table public.cigars add column if not exists wrapper text default '';
 alter table public.cigars add column if not exists binder  text default '';

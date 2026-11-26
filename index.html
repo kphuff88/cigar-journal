@@ -52,6 +52,14 @@
   .card .stars{font-size:13px;color:var(--gold);letter-spacing:.5px;white-space:nowrap}
   .card .stars .off{color:#54412a}
   .card .norate{font-size:13px;color:var(--faint)}
+  .card-meta{display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap}
+  .mini-profile{display:flex;gap:2px}
+  .mini-profile .mpb{width:12px;height:10px;border-radius:2px}
+  .mini-profile .mpb.on{box-shadow:0 0 0 1px var(--bg2),0 0 0 2px var(--text)}
+  .dollars{letter-spacing:1px;font-weight:700}
+  .dollars .on{color:#5faa4e}
+  .dollars .off{color:#54412a}
+  .card .dollars{font-size:14px}
 
   .empty,.loading{text-align:center;color:var(--muted);padding:60px 22px}
   .empty .big{font-size:54px;margin-bottom:12px}
@@ -88,6 +96,11 @@
   .row .field{flex:1}
 
   .stars-input{display:flex;flex-wrap:wrap;gap:6px;font-size:27px;color:#4a3421;user-select:none}
+  .dollars-input{display:flex;gap:10px;font-size:30px;color:#4a3421;user-select:none}
+  .dollars-input span{cursor:pointer;font-weight:700;transition:transform .1s,color .1s}
+  .dollars-input span.on{color:#5faa4e}
+  .dollars-input span:active{transform:scale(1.2)}
+  .detail-dollars{font-size:22px;letter-spacing:5px;font-weight:700;margin-bottom:16px}
   .stars-input span{cursor:pointer;transition:transform .1s,color .1s}
   .stars-input span.on{color:var(--gold)}
   .stars-input span:active{transform:scale(1.25)}
@@ -295,6 +308,13 @@
     </div>
 
     <div class="field">
+      <label>Price</label>
+      <div class="dollars-input" id="dollarsInput">
+        <span data-v="1">$</span><span data-v="2">$</span><span data-v="3">$</span><span data-v="4">$</span><span data-v="5">$</span>
+      </div>
+    </div>
+
+    <div class="field">
       <label>Profile <span class="profile-label" id="profileLabel"></span></label>
       <div class="profile-strip" id="profileStrip"></div>
       <div class="profile-ends"><span>Mild</span><span>Full</span></div>
@@ -402,7 +422,7 @@
   let cigars = [];
   let editingId = null;
   let photoBand = null, photoCigar = null;   // {blob} new uploads, or {path} existing, or null
-  let currentRating = 0, currentProfile = 0;
+  let currentRating = 0, currentProfile = 0, currentPrice = 0;
   let authMode = "login";
   const photoURLs = new Map();   // storage path -> objectURL
   let shops = [], myLoc = null, shopEditingId = null, shopLoc = null;
@@ -427,6 +447,16 @@
     currentProfile=n;
     $("#profileStrip").innerHTML=profileStripHTML(n,true);
     $("#profileLabel").textContent = n?("· "+PROFILE_LABELS[n-1]):"";
+  }
+  function miniProfileHTML(sel){
+    sel=+sel||0; let h="";
+    for(let i=1;i<=7;i++){ h+=`<span class="mpb${i===sel?' on':''}" style="background:${PROFILE_COLORS[i-1]}"></span>`; }
+    return h;
+  }
+  function dollars(n){ n=+n||0; let h=""; for(let i=1;i<=5;i++){ h+=`<span class="${i<=n?'on':'off'}">$</span>`; } return h; }
+  function setDollars(n){
+    currentPrice=n;
+    $("#dollarsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n));
   }
   function specHTML(c){
     const specs=[["Origin",c.origin],["Wrapper",c.wrapper],["Binder",c.binder],["Filler",c.filler]].filter(s=>s[1]);
@@ -633,10 +663,10 @@
         if(error) throw error;
       }else if(photoCigar===null){ cigar_path=null; }
 
-      const row = { id, user_id:uid, brand, name, rating:currentRating, profile:currentProfile, origin, wrapper, binder, filler, notes, band_path, cigar_path, updated_at:new Date().toISOString() };
+      const row = { id, user_id:uid, brand, name, rating:currentRating, profile:currentProfile, price:currentPrice, origin, wrapper, binder, filler, notes, band_path, cigar_path, updated_at:new Date().toISOString() };
       if(!existing) row.created_at = new Date().toISOString();
       let { error } = await sb.from("cigars").upsert(row);
-      if(error && /schema cache|does not exist/i.test(error.message) && /profile|origin|wrapper|binder|filler/i.test(error.message)){
+      if(error && /schema cache|does not exist/i.test(error.message) && /profile|price|origin|wrapper|binder|filler/i.test(error.message)){
         // Newer columns not added in Supabase yet — save the core fields so nothing is lost.
         const core={ id, user_id:uid, brand, name, rating:currentRating, notes, band_path, cigar_path, updated_at:row.updated_at };
         if(!existing) core.created_at=row.created_at;
@@ -691,11 +721,15 @@
     list.innerHTML=items.map(c=>{
       const p=c.band_path||c.cigar_path;
       const thumb=p?`<div class="thumb" data-photo="${esc(p)}"></div>`:`<div class="thumb">🚬</div>`;
+      const meta = (c.profile||c.price)
+        ? `<div class="card-meta">${c.profile?`<span class="mini-profile">${miniProfileHTML(c.profile)}</span>`:""}${c.price?`<span class="dollars">${dollars(c.price)}</span>`:""}</div>`
+        : "";
       return `<div class="card" data-id="${esc(c.id)}">${thumb}
         <div class="info">
           <div class="brand">${esc(c.brand)||"&nbsp;"}</div>
           <div class="name">${esc(c.name)||"Unnamed cigar"}</div>
           ${c.rating?`<div class="stars">${stars(c.rating)}</div>`:`<div class="norate">Not rated</div>`}
+          ${meta}
         </div></div>`;
     }).join("");
     list.querySelectorAll(".card").forEach(el=>el.addEventListener("click",()=>openDetail(el.dataset.id)));
@@ -712,10 +746,12 @@
     photoCigar = c&&c.cigar_path ? {path:c.cigar_path} : null;
     currentRating=c?(c.rating||0):0;
     currentProfile=c?(c.profile||0):0;
+    currentPrice=c?(c.price||0):0;
     paintSlot("slotBand","Band",photoBand,"band");
     paintSlot("slotCigar","Cigar",photoCigar,"cigar");
     setStars(currentRating);
     setProfile(currentProfile);
+    setDollars(currentPrice);
     $("#f_brand").value=c?c.brand||"":"";
     $("#f_name").value =c?c.name||"":"";
     $("#f_origin").value =c?c.origin||"":"";
@@ -830,6 +866,7 @@
       <div class="detail-brand">${esc(c.brand)||""}</div>
       <div class="detail-name">${esc(c.name)||"Unnamed cigar"}</div>
       <div class="detail-stars">${c.rating?stars(c.rating):'<span style="font-size:14px;color:var(--faint);letter-spacing:0">Not rated</span>'}</div>
+      ${c.price?`<div class="detail-dollars dollars">${dollars(c.price)}</div>`:""}
       ${c.profile?`<div class="profile-detail"><div class="profile-cap">Profile · ${PROFILE_LABELS[c.profile-1]}</div><div class="profile-strip">${profileStripHTML(c.profile,false)}</div></div>`:""}
       ${specHTML(c)}
       ${c.notes?`<div class="notes-block"><span class="k">Personal notes</span>${esc(c.notes)}</div>`:`<div class="notes-block" style="color:var(--faint)">No notes yet.</div>`}
@@ -1036,6 +1073,7 @@
 
   $("#starsInput").querySelectorAll("span").forEach(s=>s.addEventListener("click",()=>{ const v=+s.dataset.v; setStars(v===currentRating?v-1:v); }));
   $("#profileStrip").addEventListener("click",e=>{ const b=e.target.closest(".pblock"); if(!b)return; const v=+b.dataset.v; setProfile(v===currentProfile?0:v); });
+  $("#dollarsInput").querySelectorAll("span").forEach(s=>s.addEventListener("click",()=>{ const v=+s.dataset.v; setDollars(v===currentPrice?v-1:v); }));
 
   const menuPop=$("#menuPop");
   $("#menuBtn").addEventListener("click",e=>{ e.stopPropagation(); menuPop.classList.toggle("open"); });
