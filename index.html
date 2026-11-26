@@ -244,10 +244,6 @@
       <button id="installBarX" aria-label="Dismiss">✕</button>
     </span>
   </div>
-  <div class="search-wrap">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="search" type="search" placeholder="Search brand, name, or notes…" autocomplete="off">
-  </div>
   <select id="cigarJump" class="cigar-jump"><option value="">Jump to a cigar…</option></select>
   <div class="grid" id="list"></div>
 </main>
@@ -746,13 +742,11 @@
   }
   function render(){
     populateJump();
-    const q=$("#search").value.trim().toLowerCase();
-    let items=cigars.slice();
-    if(q) items=items.filter(c=>((c.brand||"")+" "+(c.name||"")+" "+(c.notes||"")).toLowerCase().includes(q));
+    const items=cigars.slice();
     $("#countPill").textContent=cigars.length;
     const list=$("#list");
     if(!items.length){
-      list.innerHTML=`<div class="empty"><div class="big">🚬</div>${cigars.length?"<p>No cigars match that search.</p>":"<p><b>No cigars logged yet.</b></p><p>Tap <b>Add Cigar</b> to snap the band and the cigar, rate it, and jot your notes.</p>"}</div>`;
+      list.innerHTML=`<div class="empty"><div class="big">🚬</div><p><b>No cigars logged yet.</b></p><p>Tap <b>Add Cigar</b> to snap the band and the cigar, rate it, and jot your notes.</p></div>`;
       return;
     }
     list.innerHTML=items.map(c=>{
@@ -1155,7 +1149,6 @@
   $("#detailClose").addEventListener("click",closeDetail);
   $("#detailEdit").addEventListener("click",()=>openEditor(editingId));
   $("#detailShare").addEventListener("click",shareCigar);
-  $("#search").addEventListener("input",render);
   $("#cigarJump").addEventListener("change",e=>{ const id=e.target.value; e.target.value=""; if(id) openDetail(id); });
 
   $("#slotBand").addEventListener("click",e=>{ if(e.target.closest(".clear"))return; $("#fileBand").click(); });
