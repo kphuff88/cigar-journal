@@ -143,6 +143,20 @@
   .gate .fine{color:var(--faint);font-size:12px;line-height:1.5;margin-top:22px;text-align:center}
   .setup-note{color:#e7c074;background:#3a2a1366;border:1px solid var(--gold-dim);border-radius:10px;padding:11px 13px;font-size:13px;line-height:1.5;margin-bottom:16px;display:none}
   .setup-note.show{display:block}
+
+  /* Cropper */
+  .cropper{z-index:70;background:#110a05;display:none}
+  .cropper.open{display:flex;flex-direction:column}
+  .crop-head{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + var(--safe-top)) 16px 10px}
+  .crop-title{font-size:16px;font-weight:600}
+  .crop-stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
+  .crop-frame{position:relative;overflow:hidden;border-radius:14px;background:#000;touch-action:none;box-shadow:0 0 0 3000px #000000d9,0 0 0 2px var(--gold-dim)}
+  .crop-frame img{position:absolute;left:0;top:0;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
+  .crop-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(#ffffff33 1px,transparent 1px),linear-gradient(90deg,#ffffff33 1px,transparent 1px);background-size:33.33% 33.33%}
+  .crop-controls{display:flex;align-items:center;gap:14px;padding:16px 24px 4px;max-width:460px;margin:0 auto;width:100%}
+  .crop-controls input[type=range]{flex:1;accent-color:var(--gold)}
+  .crop-zi{color:var(--muted);font-size:22px;width:18px;text-align:center;user-select:none}
+  .crop-hint{text-align:center;color:var(--faint);font-size:12.5px;padding:2px 16px calc(18px + var(--safe-bottom))}
 </style>
 
 <header>
@@ -255,6 +269,27 @@
     </div>
     <div id="detailBody"></div>
   </div>
+</div>
+
+<!-- Photo cropper -->
+<div class="overlay cropper" id="cropOverlay">
+  <div class="crop-head">
+    <button class="link-btn muted" id="cropCancel">Cancel</button>
+    <div class="crop-title" id="cropTitle">Frame the band</div>
+    <button class="link-btn" id="cropDone">Use photo</button>
+  </div>
+  <div class="crop-stage">
+    <div class="crop-frame" id="cropFrame">
+      <img id="cropImg" alt="">
+      <div class="crop-grid"></div>
+    </div>
+  </div>
+  <div class="crop-controls">
+    <span class="crop-zi">−</span>
+    <input type="range" id="cropZoom" min="1" max="6" step="0.01" value="1" aria-label="Zoom">
+    <span class="crop-zi">＋</span>
+  </div>
+  <div class="crop-hint">Pinch or use the slider to zoom • drag to position</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -579,15 +614,74 @@
   }
   function setStars(n){ currentRating=n; $("#starsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n)); $("#rateHint").textContent=n?`${n} of 5 stars`:"Tap to rate — tap the same star again to clear"; }
 
-  async function handleFile(which,file){
-    if(!file) return;
-    toast("Processing photo…");
-    try{ const blob=await processImage(file);
-      if(which==="band"){ photoBand={blob}; paintSlot("slotBand","Band",photoBand,"band"); }
-      else { photoCigar={blob}; paintSlot("slotCigar","Cigar",photoCigar,"cigar"); }
-      toast("Photo added");
-    }catch(e){ toast("Couldn't load that image"); }
+  // Render the user-framed square region, enhanced and compressed
+  function renderSquare(img, sx, sy, sSize){
+    return new Promise((resolve,reject)=>{
+      try{
+        const OUT=900;
+        const cv=document.createElement("canvas"); cv.width=OUT; cv.height=OUT;
+        const ctx=cv.getContext("2d");
+        try{ ctx.filter="brightness(1.06) contrast(1.10) saturate(1.06)"; }catch(e){}
+        ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, OUT, OUT);
+        ctx.filter="none";
+        try{ sharpen(ctx, OUT, OUT, 0.5); }catch(e){}
+        cv.toBlob(b=>b?resolve(b):reject(new Error("encode")),"image/jpeg",0.62);
+      }catch(e){ reject(e); }
+    });
   }
+
+  // ---- Pinch-to-zoom cropper ----
+  let crop=null;
+  function handleFile(which,file){ if(file) openCropper(which,file); }
+  function openCropper(which,file){
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const D=Math.max(180, Math.min(window.innerWidth-40, window.innerHeight-250, 360));
+        const base=D/Math.min(img.naturalWidth,img.naturalHeight);
+        crop={which,img,iw:img.naturalWidth,ih:img.naturalHeight,D,base,z:1,tx:0,ty:0,pointers:new Map(),lastDist:0,prev:null};
+        const frame=$("#cropFrame"); frame.style.width=D+"px"; frame.style.height=D+"px";
+        $("#cropImg").src=img.src;
+        $("#cropTitle").textContent = which==="band" ? "Frame the band" : "Frame the cigar";
+        $("#cropZoom").value=1;
+        centerCrop(); applyCrop();
+        $("#cropOverlay").classList.add("open");
+      };
+      img.onerror=()=>toast("Couldn't load that image");
+      img.src=reader.result;
+    };
+    reader.onerror=()=>toast("Couldn't load that image");
+    reader.readAsDataURL(file);
+  }
+  function cropDisp(){ return {w:crop.iw*crop.base*crop.z, h:crop.ih*crop.base*crop.z}; }
+  function centerCrop(){ const {w,h}=cropDisp(); crop.tx=(crop.D-w)/2; crop.ty=(crop.D-h)/2; }
+  function clampCrop(){ const {w,h}=cropDisp(); crop.tx=Math.min(0,Math.max(crop.D-w,crop.tx)); crop.ty=Math.min(0,Math.max(crop.D-h,crop.ty)); }
+  function applyCrop(){ clampCrop(); const {w,h}=cropDisp(); const im=$("#cropImg"); im.style.width=w+"px"; im.style.height=h+"px"; im.style.left=crop.tx+"px"; im.style.top=crop.ty+"px"; }
+  function cropSetZoom(z,fx,fy){
+    z=Math.max(1,Math.min(6,z));
+    if(fx==null){ fx=crop.D/2; fy=crop.D/2; }
+    const sOld=crop.base*crop.z, ix=(fx-crop.tx)/sOld, iy=(fy-crop.ty)/sOld;
+    crop.z=z;
+    const sNew=crop.base*crop.z;
+    crop.tx=fx-ix*sNew; crop.ty=fy-iy*sNew;
+    $("#cropZoom").value=z; applyCrop();
+  }
+  async function confirmCrop(){
+    if(!crop) return;
+    const s=crop.base*crop.z;
+    let sSize=crop.D/s, sx=(-crop.tx)/s, sy=(-crop.ty)/s;
+    sx=Math.max(0,Math.min(sx,crop.iw-sSize)); sy=Math.max(0,Math.min(sy,crop.ih-sSize));
+    const btn=$("#cropDone"); btn.disabled=true; btn.textContent="Working…";
+    try{
+      const blob=await renderSquare(crop.img,sx,sy,sSize);
+      if(crop.which==="band"){ photoBand={blob}; paintSlot("slotBand","Band",photoBand,"band"); }
+      else { photoCigar={blob}; paintSlot("slotCigar","Cigar",photoCigar,"cigar"); }
+      closeCropper(); toast("Photo added");
+    }catch(e){ toast("Couldn't process photo"); }
+    finally{ btn.disabled=false; btn.textContent="Use photo"; }
+  }
+  function closeCropper(){ $("#cropOverlay").classList.remove("open"); crop=null; }
 
   /* ---------------- Detail ---------------- */
   function openDetail(id){
@@ -632,6 +726,31 @@
   $("#fileBand").addEventListener("change",e=>{ handleFile("band",e.target.files[0]); e.target.value=""; });
   $("#fileCigar").addEventListener("change",e=>{ handleFile("cigar",e.target.files[0]); e.target.value=""; });
 
+  (function initCropper(){
+    const frame=$("#cropFrame");
+    frame.addEventListener("pointerdown",e=>{ if(!crop)return; frame.setPointerCapture(e.pointerId); crop.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY}); crop.prev=null; });
+    frame.addEventListener("pointermove",e=>{
+      if(!crop||!crop.pointers.has(e.pointerId))return;
+      crop.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      const pts=[...crop.pointers.values()];
+      if(crop.pointers.size===1){
+        const p=pts[0], prev=crop.prev||p;
+        crop.tx+=p.x-prev.x; crop.ty+=p.y-prev.y; crop.prev={x:p.x,y:p.y}; applyCrop();
+      }else{
+        const a=pts[0],b=pts[1], dist=Math.hypot(a.x-b.x,a.y-b.y), rect=frame.getBoundingClientRect();
+        if(crop.lastDist) cropSetZoom(crop.z*(dist/crop.lastDist),(a.x+b.x)/2-rect.left,(a.y+b.y)/2-rect.top);
+        crop.lastDist=dist;
+      }
+    });
+    function end(e){ if(!crop)return; crop.pointers.delete(e.pointerId); crop.prev=null; if(crop.pointers.size<2) crop.lastDist=0; }
+    frame.addEventListener("pointerup",end);
+    frame.addEventListener("pointercancel",end);
+    frame.addEventListener("wheel",e=>{ if(!crop)return; e.preventDefault(); const r=frame.getBoundingClientRect(); cropSetZoom(crop.z*(e.deltaY<0?1.1:0.9), e.clientX-r.left, e.clientY-r.top); },{passive:false});
+    $("#cropZoom").addEventListener("input",e=>{ if(crop) cropSetZoom(parseFloat(e.target.value)); });
+    $("#cropCancel").addEventListener("click",closeCropper);
+    $("#cropDone").addEventListener("click",confirmCrop);
+  })();
+
   $("#starsInput").querySelectorAll("span").forEach(s=>s.addEventListener("click",()=>{ const v=+s.dataset.v; setStars(v===currentRating?v-1:v); }));
 
   const menuPop=$("#menuPop");
@@ -642,7 +761,7 @@
   $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
   $("#logoutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); logout(); });
 
-  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeEditor(); closeDetail(); } });
+  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeEditor(); closeDetail(); } });
   window.addEventListener("pagehide",freePhotoURLs);
 
   /* ---------------- Boot ---------------- */
