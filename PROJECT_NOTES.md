@@ -59,9 +59,11 @@ _Last updated: 2026-11-25_
    **photos saved in the cloud** so they sync across devices — powered by the free
    Supabase backend.
 6. **Added since:** a **photo cropper** (pinch-to-zoom + drag to frame each band/cigar),
-   automatic photo cleanup (square-crop, brighten/sharpen, compress) and cloud
-   storage tidy-up, and **Shop Check** — snap a band in a shop and the app reads the
-   printed text and tells you if that cigar is already in your collection.
+   plus automatic photo cleanup (square-crop, brighten/sharpen, compress) and cloud
+   storage tidy-up.
+
+> A camera "Shop Check" (read a band and auto-match it to your collection) was tried
+> and removed — the text recognition wasn't reliable enough on real cigar bands.
 
 ---
 

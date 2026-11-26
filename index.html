@@ -157,17 +157,6 @@
   .crop-controls input[type=range]{flex:1;accent-color:var(--gold)}
   .crop-zi{color:var(--muted);font-size:22px;width:18px;text-align:center;user-select:none}
   .crop-hint{text-align:center;color:var(--faint);font-size:12.5px;padding:2px 16px calc(18px + var(--safe-bottom))}
-
-  /* Shop check (OCR) */
-  .shop-btn{width:100%;margin:0 0 16px;padding:13px;border-radius:12px;border:1px solid var(--gold-dim);background:#2a1a10;color:var(--gold-soft);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
-  .shop-btn:active{filter:brightness(1.12)}
-  .scan-shot{width:130px;height:130px;border-radius:14px;object-fit:cover;border:1px solid var(--line);display:block;margin:4px auto 16px}
-  .scan-read{background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:18px;word-break:break-word}
-  .scan-read b{color:var(--text)}
-  .scan-h{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:4px 0 10px}
-  .scan-prog{font-size:13px;color:var(--faint);margin-top:8px}
-  .scan-none{text-align:center;color:var(--muted);padding:10px 6px 4px;line-height:1.55}
-  .scan-none .big{font-size:46px;margin-bottom:8px}
 </style>
 
 <header>
@@ -193,7 +182,6 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="search" type="search" placeholder="Search brand, name, or notes…" autocomplete="off">
   </div>
-  <button class="shop-btn" id="scanBtn">📷 Shop check — is this cigar in my collection?</button>
   <div class="grid" id="list"></div>
 </main>
 
@@ -280,19 +268,6 @@
       <button class="link-btn" id="detailEdit">Edit</button>
     </div>
     <div id="detailBody"></div>
-  </div>
-</div>
-
-<!-- Shop check (OCR) -->
-<input type="file" id="scanInput" accept="image/*" capture="environment">
-<div class="overlay" id="scanOverlay">
-  <div class="sheet">
-    <div class="sheet-head">
-      <button class="link-btn muted" id="scanClose">‹ Back</button>
-      <h2>Shop check</h2>
-      <span style="width:56px"></span>
-    </div>
-    <div id="scanBody"></div>
   </div>
 </div>
 
@@ -708,91 +683,6 @@
   }
   function closeCropper(){ $("#cropOverlay").classList.remove("open"); crop=null; }
 
-  // ---- Shop check: OCR the band text and match against logged cigars ----
-  const SCAN_STOP=new Set(["the","and","for","with","from","cigar","cigars","by","of","de","la","el","los","las","una","con"]);
-  let scanFile=null;
-  function scanTokens(s){
-    return [...new Set((s||"").toLowerCase().replace(/[^a-z0-9 ]+/g," ").split(/\s+/).filter(w=>w.length>=3 && !SCAN_STOP.has(w)))];
-  }
-  function scoreCigar(c, ocr){
-    const ct=scanTokens((c.brand||"")+" "+(c.name||""));
-    let score=0;
-    for(const t of ct){
-      for(const o of ocr){
-        if(t===o || (t.length>=4 && o.length>=4 && (t.includes(o)||o.includes(t)))){ score++; break; }
-      }
-    }
-    return score;
-  }
-  function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-  function loadTesseract(){
-    return new Promise((res,rej)=>{
-      if(window.Tesseract) return res();
-      const s=document.createElement("script");
-      s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
-      s.onload=()=>res(); s.onerror=()=>rej(new Error("load"));
-      document.head.appendChild(s);
-    });
-  }
-  function startScan(){ if(!session){ $("#gateOverlay").classList.add("open"); return; } $("#scanInput").click(); }
-  async function runScan(file){
-    if(!file) return;
-    scanFile=file;
-    $("#scanBody").innerHTML = `<div class="loading"><div class="spinner"></div>Reading the band…<div class="scan-prog" id="scanProg">Getting ready…</div></div>`;
-    const ov=$("#scanOverlay"); ov.classList.add("open"); ov.scrollTop=0;
-    try{
-      const dataURL=await fileToDataURL(file);
-      await loadTesseract();
-      const { data } = await window.Tesseract.recognize(dataURL,"eng",{
-        logger:m=>{ const el=$("#scanProg"); if(el){ el.textContent = m.status==="recognizing text" ? "Reading… "+Math.round((m.progress||0)*100)+"%" : (m.status||""); } }
-      });
-      showScanResults((data&&data.text)||"", dataURL);
-    }catch(e){
-      $("#scanBody").innerHTML = `<div class="scan-none"><div class="big">⚠️</div><p>Couldn't scan that image.</p><p>Check your connection and try again.</p></div>
-        <button class="save-btn" id="scanRetry" style="margin-top:14px">Try another photo</button>`;
-      const r=$("#scanRetry"); if(r) r.addEventListener("click",startScan);
-    }
-  }
-  function showScanResults(text, dataURL){
-    const tokens=scanTokens(text);
-    const clean=(text||"").replace(/\s+/g," ").trim().slice(0,120);
-    const shot=`<img class="scan-shot" src="${dataURL}" alt="scanned band">`;
-    const read=`<div class="scan-read">What I read on the band:<br><b>${esc(clean)||"(couldn't make out any text)"}</b></div>`;
-
-    if(!tokens.length){
-      $("#scanBody").innerHTML = shot + read +
-        `<div class="scan-none"><p>I couldn't read the band clearly. Try a <b>closer, well-lit, straight-on</b> photo of just the band.</p></div>
-         <button class="save-btn" id="scanRetry">Scan again</button>
-         <button class="delete-btn" id="scanAdd" style="border-color:var(--gold-dim);color:var(--gold-soft)">Add it as a new cigar anyway</button>`;
-    }else{
-      const scored=cigars.map(c=>({c,score:scoreCigar(c,tokens)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
-      if(scored.length){
-        const cards=scored.map(({c})=>{
-          const p=c.band_path||c.cigar_path;
-          const thumb=p?`<div class="thumb" data-photo="${esc(p)}"></div>`:`<div class="thumb">🚬</div>`;
-          return `<div class="card" data-id="${esc(c.id)}">${thumb}<div class="info">
-            <div class="brand">${esc(c.brand)||"&nbsp;"}</div>
-            <div class="name">${esc(c.name)||"Unnamed cigar"}</div>
-            ${c.rating?`<div class="stars">${stars(c.rating)}</div>`:`<div class="norate">Not rated</div>`}
-          </div></div>`;
-        }).join("");
-        $("#scanBody").innerHTML = shot + read +
-          `<div class="scan-h">✓ Already in your collection</div><div class="grid" id="scanMatches">${cards}</div>`;
-        const g=$("#scanMatches");
-        g.querySelectorAll(".card").forEach(el=>el.addEventListener("click",()=>{ closeScan(); openDetail(el.dataset.id); }));
-        hydratePhotos(g);
-      }else{
-        $("#scanBody").innerHTML = shot + read +
-          `<div class="scan-none"><div class="big">🆕</div><p><b>Not in your collection yet.</b></p><p>Want to add it?</p></div>
-           <button class="save-btn" id="scanAdd">Add this cigar</button>
-           <button class="delete-btn" id="scanRetry" style="border-color:var(--line);color:var(--muted)">Scan a different one</button>`;
-      }
-    }
-    const r=$("#scanRetry"); if(r) r.addEventListener("click",startScan);
-    const a=$("#scanAdd"); if(a) a.addEventListener("click",()=>{ const f=scanFile; closeScan(); openEditor(null); if(f) openCropper("band",f); });
-  }
-  function closeScan(){ $("#scanOverlay").classList.remove("open"); }
-
   /* ---------------- Detail ---------------- */
   function openDetail(id){
     const c=cigars.find(x=>x.id===id); if(!c) return; editingId=id;
@@ -824,9 +714,6 @@
   $("#authUser").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#authPass").focus(); });
 
   $("#addBtn").addEventListener("click",()=>{ if(!session){ $("#gateOverlay").classList.add("open"); return; } openEditor(null); });
-  $("#scanBtn").addEventListener("click",startScan);
-  $("#scanClose").addEventListener("click",closeScan);
-  $("#scanInput").addEventListener("change",e=>{ runScan(e.target.files[0]); e.target.value=""; });
   $("#editCancel").addEventListener("click",closeEditor);
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
@@ -874,7 +761,7 @@
   $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
   $("#logoutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); logout(); });
 
-  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeScan(); closeEditor(); closeDetail(); } });
+  window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeEditor(); closeDetail(); } });
   window.addEventListener("pagehide",freePhotoURLs);
 
   /* ---------------- Boot ---------------- */
