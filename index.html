@@ -45,10 +45,16 @@
   .search-wrap input:focus{outline:2px solid var(--gold-dim)}
   .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
 
-  .install-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#2a1a10;border:1px solid var(--gold-dim);border-radius:12px;padding:10px 12px;margin:2px 0 14px;font-size:13.5px;color:var(--gold-soft);line-height:1.35}
+  .install-bar{display:flex;flex-direction:column;gap:6px;background:#2a1a10;border:1px solid var(--gold-dim);border-radius:12px;padding:11px 13px;margin:2px 0 14px;font-size:13.5px;color:var(--gold-soft);line-height:1.35}
+  .install-bar .ib-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .install-bar #installBarText{font-weight:700}
   .install-bar .ib-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto}
   .install-bar button{background:none;border:none;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px;padding:7px 8px}
   .install-bar #installBarGo{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border-radius:8px;padding:8px 14px}
+  .install-bar .ib-detail{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .install-bar .ib-detail b{color:var(--gold-soft);font-weight:600}
+  .install-bar .ib-detail ol{margin:4px 0 0;padding-left:20px}
+  .install-bar .ib-detail li{margin:3px 0}
 
   .stats-bar{font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;padding:9px 12px;margin:2px 0 12px;text-align:center}
   .stats-bar b{color:var(--gold);font-weight:600}
@@ -265,11 +271,14 @@
 
 <main>
   <div class="install-bar" id="installBar" style="display:none">
-    <span id="installBarText">📲 Add Cigar Log to your home screen</span>
-    <span class="ib-actions">
-      <button id="installBarGo">Install</button>
-      <button id="installBarX" aria-label="Dismiss">✕</button>
-    </span>
+    <div class="ib-top">
+      <span id="installBarText">📲 Add Cigar Log to your home screen</span>
+      <span class="ib-actions">
+        <button id="installBarGo">Install</button>
+        <button id="installBarX" aria-label="Dismiss">✕</button>
+      </span>
+    </div>
+    <div class="ib-detail" id="installBarDetail"></div>
   </div>
   <div id="statsBar" class="stats-bar" style="display:none"></div>
   <div class="main-controls">
@@ -1206,8 +1215,21 @@
     if(isStandalone) return;
     try{ if(localStorage.getItem("cigar_install_dismissed")) return; }catch(e){}
     const bar=$("#installBar"); if(!bar) return;
-    if(mode==="android"){ $("#installBarText").textContent="📲 Add Cigar Log to your home screen"; $("#installBarGo").style.display=""; }
-    else { $("#installBarText").textContent="📲 Add to Home Screen — tap Share ⬆️, then “Add to Home Screen”"; $("#installBarGo").style.display="none"; }
+    const detail=$("#installBarDetail");
+    if(mode==="android"){
+      $("#installBarText").textContent="📲 Add Cigar Log to your home screen";
+      $("#installBarGo").style.display="";
+      if(detail) detail.innerHTML="Tap <b>Install</b>, then <b>Add</b> to confirm. A <b>Cigar Log</b> icon appears on your home screen — open it from there and the app runs full-screen, like a normal app with no browser bar.";
+    } else {
+      $("#installBarText").textContent="📲 Add Cigar Log to your home screen";
+      $("#installBarGo").style.display="none";
+      if(detail) detail.innerHTML="Get the app icon on your iPhone in 3 taps:"
+        +"<ol>"
+        +"<li>Tap the <b>Share</b> button — the square with an up-arrow ⬆️ at the bottom of Safari.</li>"
+        +"<li>Scroll down and tap <b>Add to Home Screen</b>.</li>"
+        +"<li>Tap <b>Add</b> in the top-right corner.</li>"
+        +"</ol>Then open <b>Cigar Log</b> from your home screen like any other app.";
+    }
     bar.style.display="flex";
   }
   async function triggerInstall(){
