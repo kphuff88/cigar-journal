@@ -11,6 +11,11 @@ create table if not exists public.cigars (
   brand       text default '',
   name        text default '',
   rating      int2 default 0,
+  profile     int2 default 0,
+  origin      text default '',
+  wrapper     text default '',
+  binder      text default '',
+  filler      text default '',
   notes       text default '',
   band_path   text,
   cigar_path  text,
@@ -19,6 +24,13 @@ create table if not exists public.cigars (
 );
 
 create index if not exists cigars_user_idx on public.cigars(user_id);
+
+-- 1a. Add newer columns to an existing table (safe if they already exist)
+alter table public.cigars add column if not exists profile int2 default 0;
+alter table public.cigars add column if not exists origin  text default '';
+alter table public.cigars add column if not exists wrapper text default '';
+alter table public.cigars add column if not exists binder  text default '';
+alter table public.cigars add column if not exists filler  text default '';
 
 -- 1b. Grant logged-in users access to the table through the API
 grant usage on schema public to anon, authenticated;

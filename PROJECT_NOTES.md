@@ -86,6 +86,9 @@ from any device.
 - [ ] **Turn OFF email confirmation** in Supabase so username logins work. _See how-to below._
 - [x] Test: create an account on the live app and add a cigar.
 - [ ] **Run `supabase-shops.sql`** in Supabase → SQL Editor (creates the shared Cigar Shops directory). Until then, the 📍 Shops screen will say "Almost ready".
+- [ ] **Re-run `supabase-setup.sql`** (or the short ALTER snippet) to add the new cigar
+      columns: `profile`, `origin`, `wrapper`, `binder`, `filler`. Until then the app
+      still saves, but those new fields won't be stored.
 
 ---
 

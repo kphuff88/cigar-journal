@@ -93,6 +93,21 @@
   .stars-input span:active{transform:scale(1.25)}
   .rate-hint{font-size:12.5px;color:var(--faint);margin-top:6px}
 
+  .profile-strip{display:flex;gap:5px;margin-top:2px}
+  .profile-strip .pblock{flex:1;height:30px;border-radius:6px;border:none;padding:0;cursor:pointer}
+  .profile-strip .pblock.on{box-shadow:0 0 0 2px var(--bg2),0 0 0 4px var(--text)}
+  .profile-detail .pblock{cursor:default}
+  .profile-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:6px}
+  .profile-label{color:var(--gold);font-weight:600;font-size:12px}
+  .profile-detail{margin-bottom:18px}
+  .profile-cap{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px}
+
+  .spec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .spec{background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;padding:11px 13px}
+  .spec.full{grid-column:1 / -1}
+  .spec .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .spec .v{font-size:15.5px;font-weight:600;margin-top:3px;word-break:break-word}
+
   .save-btn{width:100%;padding:16px;border:none;border-radius:13px;font-size:17px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer;margin-top:10px}
   .save-btn:disabled{opacity:.6}
   .save-btn:active{filter:brightness(.95)}
@@ -264,12 +279,25 @@
       <div class="field"><label>Name</label><input id="f_name" placeholder="e.g. 1964 Anniversary" autocomplete="off"></div>
     </div>
 
+    <div class="field"><label>Origin</label><input id="f_origin" placeholder="e.g. Nicaragua" autocomplete="off"></div>
+    <div class="row">
+      <div class="field"><label>Wrapper</label><input id="f_wrapper" placeholder="e.g. Maduro" autocomplete="off"></div>
+      <div class="field"><label>Binder</label><input id="f_binder" placeholder="e.g. Nicaraguan" autocomplete="off"></div>
+    </div>
+    <div class="field"><label>Filler(s)</label><input id="f_filler" placeholder="e.g. Nicaragua (Ligero, Viso)" autocomplete="off"></div>
+
     <div class="field">
       <label>Your rating</label>
       <div class="stars-input" id="starsInput">
         <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span><span data-v="6">★</span><span data-v="7">★</span><span data-v="8">★</span><span data-v="9">★</span><span data-v="10">★</span>
       </div>
       <div class="rate-hint" id="rateHint">Tap to rate — tap the same star again to clear</div>
+    </div>
+
+    <div class="field">
+      <label>Profile <span class="profile-label" id="profileLabel"></span></label>
+      <div class="profile-strip" id="profileStrip"></div>
+      <div class="profile-ends"><span>Mild</span><span>Full</span></div>
     </div>
 
     <div class="field"><label>Personal notes</label><textarea id="f_notes" placeholder="Flavors, draw, burn, pairing, where and when you smoked it…"></textarea></div>
@@ -374,7 +402,7 @@
   let cigars = [];
   let editingId = null;
   let photoBand = null, photoCigar = null;   // {blob} new uploads, or {path} existing, or null
-  let currentRating = 0;
+  let currentRating = 0, currentProfile = 0;
   let authMode = "login";
   const photoURLs = new Map();   // storage path -> objectURL
   let shops = [], myLoc = null, shopEditingId = null, shopLoc = null;
@@ -382,6 +410,32 @@
   const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   function ratingColor(n){ n=+n||0; if(n<=0) return null; if(n<=3) return "#d8463a"; if(n<=5) return "#e08a2e"; if(n<=8) return "#e3c23c"; return "#5faa4e"; }
   function stars(n){ n=+n||0; const col=ratingColor(n); let h=""; for(let i=1;i<=10;i++){ h += i<=n ? `<span style="color:${col}">★</span>` : `<span class="off">★</span>`; } return h; }
+
+  const PROFILE_COLORS=["#f2c14e","#efa63a","#ec8a32","#e56a2b","#d84a2a","#bf3127","#8f2020"];
+  const PROFILE_LABELS=["Very mild","Mild","Mild–Medium","Medium","Medium–Full","Full","Very full"];
+  function profileStripHTML(sel, interactive){
+    sel=+sel||0; let h="";
+    for(let i=1;i<=7;i++){
+      const on=i===sel?" on":"";
+      h += interactive
+        ? `<button type="button" class="pblock${on}" data-v="${i}" style="background:${PROFILE_COLORS[i-1]}" aria-label="${PROFILE_LABELS[i-1]}"></button>`
+        : `<span class="pblock${on}" style="background:${PROFILE_COLORS[i-1]}"></span>`;
+    }
+    return h;
+  }
+  function setProfile(n){
+    currentProfile=n;
+    $("#profileStrip").innerHTML=profileStripHTML(n,true);
+    $("#profileLabel").textContent = n?("· "+PROFILE_LABELS[n-1]):"";
+  }
+  function specHTML(c){
+    const specs=[["Origin",c.origin],["Wrapper",c.wrapper],["Binder",c.binder],["Filler",c.filler]].filter(s=>s[1]);
+    if(!specs.length) return "";
+    return `<div class="spec-grid">`+specs.map((s,i)=>{
+      const full=(specs.length%2===1 && i===specs.length-1)?" full":"";
+      return `<div class="spec${full}"><div class="k">${esc(s[0])}</div><div class="v">${esc(String(s[1]))}</div></div>`;
+    }).join("")+`</div>`;
+  }
   function emailFor(u){ return u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,"") + "@" + EMAIL_DOMAIN; }
 
   let toastT;
@@ -556,6 +610,7 @@
 
   async function saveCigar(){
     const brand=$("#f_brand").value.trim(), name=$("#f_name").value.trim(), notes=$("#f_notes").value.trim();
+    const origin=$("#f_origin").value.trim(), wrapper=$("#f_wrapper").value.trim(), binder=$("#f_binder").value.trim(), filler=$("#f_filler").value.trim();
     if(!brand && !name && !notes && !photoBand && !photoCigar){ toast("Add a photo or some details first"); return; }
     const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Saving…";
     try{
@@ -578,9 +633,16 @@
         if(error) throw error;
       }else if(photoCigar===null){ cigar_path=null; }
 
-      const row = { id, user_id:uid, brand, name, rating:currentRating, notes, band_path, cigar_path, updated_at:new Date().toISOString() };
+      const row = { id, user_id:uid, brand, name, rating:currentRating, profile:currentProfile, origin, wrapper, binder, filler, notes, band_path, cigar_path, updated_at:new Date().toISOString() };
       if(!existing) row.created_at = new Date().toISOString();
-      const { error } = await sb.from("cigars").upsert(row);
+      let { error } = await sb.from("cigars").upsert(row);
+      if(error && /schema cache|does not exist/i.test(error.message) && /profile|origin|wrapper|binder|filler/i.test(error.message)){
+        // Newer columns not added in Supabase yet — save the core fields so nothing is lost.
+        const core={ id, user_id:uid, brand, name, rating:currentRating, notes, band_path, cigar_path, updated_at:row.updated_at };
+        if(!existing) core.created_at=row.created_at;
+        ({ error } = await sb.from("cigars").upsert(core));
+        if(!error) toast("Saved — run the latest setup SQL in Supabase to store the new fields");
+      }
       if(error) throw error;
 
       // tidy storage: remove photos that were cleared (replacements overwrite the same path)
@@ -649,11 +711,17 @@
     photoBand  = c&&c.band_path  ? {path:c.band_path}  : null;
     photoCigar = c&&c.cigar_path ? {path:c.cigar_path} : null;
     currentRating=c?(c.rating||0):0;
+    currentProfile=c?(c.profile||0):0;
     paintSlot("slotBand","Band",photoBand,"band");
     paintSlot("slotCigar","Cigar",photoCigar,"cigar");
     setStars(currentRating);
+    setProfile(currentProfile);
     $("#f_brand").value=c?c.brand||"":"";
     $("#f_name").value =c?c.name||"":"";
+    $("#f_origin").value =c?c.origin||"":"";
+    $("#f_wrapper").value=c?c.wrapper||"":"";
+    $("#f_binder").value =c?c.binder||"":"";
+    $("#f_filler").value =c?c.filler||"":"";
     $("#f_notes").value=c?c.notes||"":"";
     $("#detailOverlay").classList.remove("open");
     const ov=$("#editorOverlay"); ov.classList.add("open"); ov.scrollTop=0;
@@ -762,6 +830,8 @@
       <div class="detail-brand">${esc(c.brand)||""}</div>
       <div class="detail-name">${esc(c.name)||"Unnamed cigar"}</div>
       <div class="detail-stars">${c.rating?stars(c.rating):'<span style="font-size:14px;color:var(--faint);letter-spacing:0">Not rated</span>'}</div>
+      ${c.profile?`<div class="profile-detail"><div class="profile-cap">Profile · ${PROFILE_LABELS[c.profile-1]}</div><div class="profile-strip">${profileStripHTML(c.profile,false)}</div></div>`:""}
+      ${specHTML(c)}
       ${c.notes?`<div class="notes-block"><span class="k">Personal notes</span>${esc(c.notes)}</div>`:`<div class="notes-block" style="color:var(--faint)">No notes yet.</div>`}
       ${d?`<div class="detail-date">Logged ${d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</div>`:""}`;
     const ov=$("#detailOverlay"); ov.classList.add("open"); ov.scrollTop=0;
@@ -965,6 +1035,7 @@
   })();
 
   $("#starsInput").querySelectorAll("span").forEach(s=>s.addEventListener("click",()=>{ const v=+s.dataset.v; setStars(v===currentRating?v-1:v); }));
+  $("#profileStrip").addEventListener("click",e=>{ const b=e.target.closest(".pblock"); if(!b)return; const v=+b.dataset.v; setProfile(v===currentProfile?0:v); });
 
   const menuPop=$("#menuPop");
   $("#menuBtn").addEventListener("click",e=>{ e.stopPropagation(); menuPop.classList.toggle("open"); });
