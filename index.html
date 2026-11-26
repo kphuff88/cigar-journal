@@ -32,7 +32,7 @@
   }
   header{position:sticky;top:0;z-index:20;padding:calc(15px + var(--safe-top)) 18px 13px;background:linear-gradient(180deg,#2a1a11 0%,#2a1a11f2 72%,#2a1a1100 100%);display:flex;align-items:center;justify-content:space-between;gap:10px}
   .brandmark{display:flex;align-items:center;gap:10px}
-  .brandmark .mark{width:34px;height:34px;border-radius:9px;flex:0 0 auto;background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:inset 0 1px 1px #fff5,0 2px 6px #0006}
+  .brandmark .mark{width:36px;height:36px;border-radius:9px;flex:0 0 auto;object-fit:cover;box-shadow:0 2px 6px #0006}
   header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.3px}
   header h1 small{display:block;font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.6px;margin-top:1px;text-transform:uppercase}
   .tools{display:flex;align-items:center;gap:8px;position:relative}
@@ -165,7 +165,7 @@
   /* Auth gate */
   .gate{z-index:60;background:radial-gradient(120% 60% at 50% 0%,#33200f 0%,var(--bg) 60%)}
   .gate .gate-card{max-width:400px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:calc(30px + var(--safe-top)) 24px calc(34px + var(--safe-bottom))}
-  .gate-mark{width:64px;height:64px;border-radius:18px;margin:0 auto 18px;background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:inset 0 1px 2px #fff6,0 8px 22px #0008}
+  .gate-mark{width:76px;height:76px;border-radius:20px;margin:0 auto 18px;object-fit:cover;box-shadow:0 8px 22px #0008}
   .gate h2{margin:0 0 6px;font-size:24px;letter-spacing:.3px;text-align:center}
   .gate .sub{color:var(--muted);font-size:14.5px;line-height:1.5;margin:0 0 22px;text-align:center}
   .tabs{display:flex;background:#241610;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:18px}
@@ -219,7 +219,7 @@
 
 <header>
   <div class="brandmark">
-    <div class="mark">🚬</div>
+    <img class="mark" src="icon-192.png" alt="Cigar Log">
     <h1>Cigar Log<small id="userLine">Your pocket humidor</small></h1>
   </div>
   <div class="tools">
@@ -256,7 +256,7 @@
 <!-- Auth gate -->
 <div class="overlay gate" id="gateOverlay">
   <div class="gate-card">
-    <div class="gate-mark">🚬</div>
+    <img class="gate-mark" src="icon-192.png" alt="Cigar Log">
     <h2 id="gateHead">Cigar Log</h2>
     <p class="sub">Create an account or log in. Your cigars sync across every device you sign in on.</p>
 
