@@ -355,8 +355,10 @@
   <div class="sheet">
     <div class="sheet-head">
       <button class="link-btn muted" id="detailClose">‹ Back</button>
-      <h2></h2>
-      <button class="link-btn" id="detailEdit">Edit</button>
+      <span style="display:flex;gap:2px">
+        <button class="link-btn" id="detailShare">✉ Email</button>
+        <button class="link-btn" id="detailEdit">Edit</button>
+      </span>
     </div>
     <div id="detailBody"></div>
   </div>
@@ -913,6 +915,40 @@
   }
   function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
 
+  function cigarSummary(c){
+    const title=`Cigar: ${[c.brand,c.name].filter(Boolean).join(" ")||"Unnamed cigar"}`;
+    const lines=[[c.brand,c.name].filter(Boolean).join(" ")||"A cigar",""];
+    [["Size",c.size],["Origin",c.origin],["Wrapper",c.wrapper],["Binder",c.binder],["Filler",c.filler],["Purchased",fmtDate(c.purchase_date)]]
+      .filter(s=>s[1]).forEach(s=>lines.push(`${s[0]}: ${s[1]}`));
+    if(c.rating)  lines.push(`My rating: ${c.rating}/10`);
+    if(c.profile) lines.push(`Strength: ${PROFILE_LABELS[c.profile-1]}`);
+    if(c.price)   lines.push(`Price: ${"$".repeat(c.price)}`);
+    if(c.notes)   lines.push(`\nNotes: ${c.notes}`);
+    lines.push(`\nThought you might like this one!`);
+    lines.push(`— Sent from Cigar Log (https://kphuff88.github.io/cigar-journal/)`);
+    return { title, text: lines.join("\n") };
+  }
+  async function shareCigar(){
+    const c=cigars.find(x=>x.id===editingId); if(!c) return;
+    const { title, text } = cigarSummary(c);
+    let files=[];
+    try{
+      const path=c.band_path||c.cigar_path;
+      if(path){
+        const { data } = await sb.storage.from(BUCKET).download(path);
+        if(data){
+          const f=new File([data], "cigar.jpg", {type:data.type||"image/jpeg"});
+          if(navigator.canShare && navigator.canShare({files:[f]})) files=[f];
+        }
+      }
+    }catch(e){}
+    if(navigator.share){
+      try{ await navigator.share(files.length?{title,text,files}:{title,text}); return; }
+      catch(e){ if(e && e.name==="AbortError") return; }
+    }
+    window.location.href=`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`;
+  }
+
   // ---- Cigar shops (shared directory) ----
   function haversineMi(a,b){
     const R=3958.8, toR=x=>x*Math.PI/180;
@@ -1100,6 +1136,7 @@
   $("#deleteBtn").addEventListener("click",deleteCigar);
   $("#detailClose").addEventListener("click",closeDetail);
   $("#detailEdit").addEventListener("click",()=>openEditor(editingId));
+  $("#detailShare").addEventListener("click",shareCigar);
   $("#search").addEventListener("input",render);
   $("#cigarJump").addEventListener("change",e=>{ const id=e.target.value; e.target.value=""; if(id) openDetail(id); });
 
