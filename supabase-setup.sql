@@ -13,6 +13,8 @@ create table if not exists public.cigars (
   rating      int2 default 0,
   profile     int2 default 0,
   price       int2 default 0,
+  favorite    boolean default false,
+  quantity    int2 default 0,
   size          text default '',
   origin      text default '',
   wrapper     text default '',
@@ -37,6 +39,8 @@ alter table public.cigars add column if not exists binder  text default '';
 alter table public.cigars add column if not exists filler  text default '';
 alter table public.cigars add column if not exists size          text default '';
 alter table public.cigars add column if not exists purchase_date date;
+alter table public.cigars add column if not exists favorite boolean default false;
+alter table public.cigars add column if not exists quantity int2 default 0;
 
 -- 1b. Grant logged-in users access to the table through the API
 grant usage on schema public to anon, authenticated;
