@@ -1223,10 +1223,11 @@
     } else {
       $("#installBarText").textContent="📲 Add Cigar Log to your home screen";
       $("#installBarGo").style.display="none";
-      if(detail) detail.innerHTML="Get the app icon on your iPhone in 3 taps:"
+      if(detail) detail.innerHTML="Get the app icon on your iPhone:"
         +"<ol>"
-        +"<li>Tap the <b>Share</b> button — the square with an up-arrow ⬆️ at the bottom of Safari.</li>"
-        +"<li>Scroll down and tap <b>Add to Home Screen</b>.</li>"
+        +"<li>Can't see a toolbar at the bottom? Tap the <b>address bar</b> at the very bottom of Safari once to bring it up.</li>"
+        +"<li>Tap the <b>Share</b> button — a square with an up-arrow ⬆️.</li>"
+        +"<li>Scroll down the list and tap <b>Add to Home Screen</b>.</li>"
         +"<li>Tap <b>Add</b> in the top-right corner.</li>"
         +"</ol>Then open <b>Cigar Log</b> from your home screen like any other app.";
     }
@@ -1241,7 +1242,7 @@
       return;
     }
     alert(isiOS
-      ? "To add the icon on iPhone:\n\n1. Tap the Share button (the square with an up-arrow) at the bottom of Safari.\n2. Scroll down and tap “Add to Home Screen.”\n3. Tap “Add.”\n\nA Cigar Log icon appears on your home screen; tapping it opens the app."
+      ? "To add the icon on iPhone:\n\n1. If you don’t see a toolbar at the bottom, tap the address bar at the very bottom of Safari once to bring it up.\n2. Tap the Share button (a square with an up-arrow).\n3. Scroll down and tap “Add to Home Screen.”\n4. Tap “Add.”\n\nA Cigar Log icon appears on your home screen; tapping it opens the app."
       : "To add the icon on Android:\n\n1. Tap the ⋮ menu in Chrome (top-right).\n2. Tap “Add to Home screen” / “Install app.”\n3. Confirm.\n\nA Cigar Log icon appears on your home screen; tapping it opens the app.");
   }
 
