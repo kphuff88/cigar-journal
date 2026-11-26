@@ -55,9 +55,13 @@ _Last updated: 2026-11-25_
    a **5-star rating**, and **personal notes**.
 3. **Put it online** (free) at the GitHub Pages link above.
 4. **Added usernames** so each person has their own log on their device.
-5. **Phase 2 (in progress now):** real **accounts (email + password)** with cigars,
-   ratings, notes, and **photos saved in the cloud** so they sync across devices —
-   powered by the free Supabase backend you just set up.
+5. **Phase 2:** real **accounts (email + password)** with cigars, ratings, notes, and
+   **photos saved in the cloud** so they sync across devices — powered by the free
+   Supabase backend.
+6. **Added since:** a **photo cropper** (pinch-to-zoom + drag to frame each band/cigar),
+   automatic photo cleanup (square-crop, brighten/sharpen, compress) and cloud
+   storage tidy-up, and **Shop Check** — snap a band in a shop and the app reads the
+   printed text and tells you if that cigar is already in your collection.
 
 ---
 
