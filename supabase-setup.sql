@@ -20,6 +20,10 @@ create table if not exists public.cigars (
 
 create index if not exists cigars_user_idx on public.cigars(user_id);
 
+-- 1b. Grant logged-in users access to the table through the API
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.cigars to authenticated;
+
 -- 2. Turn on Row Level Security so each user only sees THEIR OWN cigars
 alter table public.cigars enable row level security;
 
