@@ -55,7 +55,7 @@ _Last updated: 2026-11-25_
    a **5-star rating**, and **personal notes**.
 3. **Put it online** (free) at the GitHub Pages link above.
 4. **Added usernames** so each person has their own log on their device.
-5. **Phase 2 (in progress now):** real **accounts (username + password)** with cigars,
+5. **Phase 2 (in progress now):** real **accounts (email + password)** with cigars,
    ratings, notes, and **photos saved in the cloud** so they sync across devices —
    powered by the free Supabase backend you just set up.
 
@@ -85,11 +85,13 @@ from any device.
 3. Open the file `supabase-setup.sql` (in this project), copy **everything**, paste it in.
 4. Click **Run**. You should see "Success."
 
-**Step B — Allow username logins (turn off email confirmation)**
+**Step B — Let new users start right away (turn off email confirmation)**
 1. Left sidebar → **Authentication**.
 2. Find **Sign In / Providers** (or **Providers**) → **Email**.
 3. Turn **OFF** the **"Confirm email"** toggle → **Save**.
-_(Why: our logins use usernames, not real emails, so there's no inbox to confirm.)_
+_(Why: people sign in with their email + password. With confirmation OFF they can start
+immediately instead of waiting for a confirmation email — the free tier only sends a few
+emails per hour. We can turn this back ON later and add "forgot password" at the same time.)_
 
 ---
 

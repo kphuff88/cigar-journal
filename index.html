@@ -191,13 +191,13 @@
     <div class="setup-note" id="setupNote"></div>
     <div class="err" id="gateErr"></div>
 
-    <label for="authUser">Username</label>
-    <input id="authUser" type="text" placeholder="e.g. kevin" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24">
+    <label for="authUser">Email address</label>
+    <input id="authUser" type="email" placeholder="you@example.com" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email">
     <label for="authPass">Password</label>
     <input id="authPass" type="password" placeholder="At least 6 characters" autocomplete="current-password">
 
     <button class="go" id="authGo">Log in</button>
-    <p class="fine" id="gateFine">Usernames and passwords are stored securely by your Supabase backend. Photos and ratings are saved to your private cloud space.</p>
+    <p class="fine" id="gateFine">Your email and password are stored securely by your Supabase backend. Photos and ratings are saved to your private cloud space.</p>
   </div>
 </div>
 
@@ -309,15 +309,15 @@
     const u = $("#authUser").value.trim();
     const p = $("#authPass").value;
     showErr(""); showSetupNote("");
-    if(!/^[a-zA-Z0-9._-]{3,24}$/.test(u)){ showErr("Username must be 3–24 characters: letters, numbers, dot, dash or underscore."); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)){ showErr("Enter a valid email address (e.g. you@example.com)."); return; }
     if(p.length<6){ showErr("Password must be at least 6 characters."); return; }
     if(!sb){ showErr("Couldn't load the backend. Check your connection and refresh."); return; }
 
     const btn=$("#authGo"); btn.disabled=true; btn.textContent = authMode==="login"?"Logging in…":"Creating…";
     try{
-      const email = emailFor(u);
+      const email = u.toLowerCase();
       if(authMode==="signup"){
-        const { data, error } = await sb.auth.signUp({ email, password:p, options:{ data:{ username:u } } });
+        const { data, error } = await sb.auth.signUp({ email, password:p, options:{ data:{ username:u.split("@")[0] } } });
         if(error) throw error;
         if(!data.session){
           // Email confirmation is still ON for this project — sign-in blocked.
@@ -332,8 +332,8 @@
       // session established via onAuthStateChange
     }catch(err){
       const m=(err&&err.message)||"Something went wrong.";
-      if(/already registered|already exists/i.test(m)) showErr("That username is taken. Try logging in instead.");
-      else if(/invalid login credentials/i.test(m)) showErr("Wrong username or password.");
+      if(/already registered|already exists/i.test(m)) showErr("That email is already registered. Try logging in instead.");
+      else if(/invalid login credentials/i.test(m)) showErr("Wrong email or password.");
       else showErr(m);
     }finally{
       btn.disabled=false; btn.textContent = authMode==="login"?"Log in":"Create account";
@@ -557,7 +557,7 @@
   function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
 
   function about(){
-    alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYou sign in with a username and password. Your cigars, ratings, notes and photos are saved to your private cloud space, so they appear on any device you log in on. Only you can see your cigars.");
+    alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYou sign in with your email and a password. Your cigars, ratings, notes and photos are saved to your private cloud space, so they appear on any device you log in on. Only you can see your cigars.");
   }
   const isiOS=/iP(hone|ad|od)/.test(navigator.userAgent);
   function installHelp(){ alert(isiOS?"To install on iPhone:\n\n1. Tap the Share button (□↑) at the bottom of Safari.\n2. Choose “Add to Home Screen.”":"To install on Android:\n\n1. Tap the ⋮ menu in Chrome.\n2. Choose “Add to Home screen” / “Install app.”"); }
