@@ -1,7 +1,7 @@
 # Cigar Log 🚬
 
-A simple, free web app for logging cigars from your phone. Anyone can open it and
-start logging — no account required.
+A simple, free web app for logging cigars from your phone. Anyone can open it,
+pick a username, and start logging.
 
 For each cigar you can record:
 
@@ -15,14 +15,18 @@ For each cigar you can record:
 On your phone, open that link and use **Add to Home Screen** to install it like a
 native app.
 
-## How your data is stored
+## Usernames & how your data is stored
 
-Each person's cigars are saved **privately on their own device** (in the browser's
-IndexedDB). Nothing is uploaded and there is no shared database or login. Use the
-**⋮ menu → Export / backup** to save a JSON file you can re-import on another phone.
+On first open, each person picks a **username**. For now this is a **device-local
+profile**, not an online account: the username and all cigars (photos included) are
+saved **privately on that device** in the browser's IndexedDB. There is no password,
+nothing is uploaded, and the username does not yet sync between devices. Multiple
+people can keep separate logs on the same device via **⋮ menu → Switch user**. Use
+**⋮ menu → Export / backup** to move a user's log to another device.
 
-> Want a shared version where users sign in and can see each other's cigars? That
-> requires a backend server + database — a larger project than this single-page app.
+> **Planned next:** real online accounts (username + password) backed by a server +
+> database, so a user's photos and ratings follow them across devices. This app is
+> structured (each record carries an `owner`) to make that migration straightforward.
 
 ## Technical
 
