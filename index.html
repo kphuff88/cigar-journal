@@ -402,19 +402,33 @@
   }
 
   /* ---------------- Data ---------------- */
+  function withTimeout(thenable, ms){
+    return Promise.race([
+      Promise.resolve(thenable),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms))
+    ]);
+  }
+  function retryUI(html){
+    $("#list").innerHTML = html + `<button class="save-btn" id="retryLoad" style="max-width:220px;margin:16px auto 0;display:block">Retry</button>`;
+    const r=$("#retryLoad"); if(r) r.addEventListener("click",loadCigars);
+  }
   async function loadCigars(){
     $("#list").innerHTML = `<div class="loading"><div class="spinner"></div>Loading your cigars…</div>`;
-    const { data, error } = await sb.from("cigars").select("*").order("updated_at",{ascending:false});
-    if(error){
-      if(/relation .*cigars.* does not exist|not find the table|schema cache/i.test(error.message)){
-        $("#list").innerHTML = `<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then refresh.</p></div>`;
-      }else{
-        $("#list").innerHTML = `<div class="empty"><div class="big">⚠️</div><p>Couldn't load cigars.</p><p>${esc(error.message)}</p></div>`;
+    try{
+      const { data, error } = await withTimeout(sb.from("cigars").select("*").order("updated_at",{ascending:false}), 15000);
+      if(error){
+        if(/relation .*cigars.* does not exist|not find the table|schema cache/i.test(error.message)){
+          retryUI(`<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then tap Retry.</p></div>`);
+        }else{
+          retryUI(`<div class="empty"><div class="big">⚠️</div><p>Couldn't load cigars.</p><p>${esc(error.message)}</p></div>`);
+        }
+        return;
       }
-      return;
+      cigars = data||[];
+      render();
+    }catch(e){
+      retryUI(`<div class="empty"><div class="big">📡</div><p><b>Couldn't reach the server.</b></p><p>Check your connection and tap Retry. (Supabase may be having a brief hiccup.)</p></div>`);
     }
-    cigars = data||[];
-    render();
   }
 
   async function saveCigar(){
