@@ -1021,6 +1021,7 @@
         <div class="srow">
           <div class="sactions">
             <a href="${mapsUrl(s)}" target="_blank" rel="noopener noreferrer">Directions ›</a>
+            <button data-share="${esc(s.id)}">Share</button>
             ${mine?`<button data-edit="${esc(s.id)}">Edit</button>`:""}
           </div>
           ${dist}
@@ -1028,6 +1029,23 @@
       </div>`;
     }).join("");
     list.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>openShopForm(b.getAttribute("data-edit"))));
+    list.querySelectorAll("[data-share]").forEach(b=>b.addEventListener("click",()=>shareShop(b.getAttribute("data-share"))));
+  }
+  async function shareShop(id){
+    const s=shops.find(x=>x.id===id); if(!s) return;
+    const addr=[s.address,s.city].filter(Boolean).join(", ");
+    const url=mapsUrl(s);
+    const lines=[s.name];
+    if(addr) lines.push(addr);
+    if(s.notes) lines.push("", s.notes);
+    lines.push("", `Directions: ${url}`, `— Shared from Cigar Log`);
+    const text=lines.join("\n");
+    const title=`Cigar shop: ${s.name}`;
+    if(navigator.share){
+      try{ await navigator.share({title,text,url}); return; }
+      catch(e){ if(e && e.name==="AbortError") return; }
+    }
+    window.location.href=`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text)}`;
   }
   async function nearMe(){
     const btn=$("#nearMeBtn"), prev=btn.textContent; btn.textContent="Locating…"; btn.disabled=true;
