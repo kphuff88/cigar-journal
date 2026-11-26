@@ -49,7 +49,7 @@
   .card .info{flex:1;min-width:0}
   .card .info .brand{font-size:12px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card .info .name{font-size:17px;font-weight:600;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card .stars{font-size:14px;color:var(--gold);letter-spacing:1.5px}
+  .card .stars{font-size:13px;color:var(--gold);letter-spacing:.5px;white-space:nowrap}
   .card .stars .off{color:#54412a}
   .card .norate{font-size:13px;color:var(--faint)}
 
@@ -87,7 +87,7 @@
   .row{display:flex;gap:12px}
   .row .field{flex:1}
 
-  .stars-input{display:flex;gap:8px;font-size:36px;color:#4a3421;user-select:none}
+  .stars-input{display:flex;flex-wrap:wrap;gap:6px;font-size:27px;color:#4a3421;user-select:none}
   .stars-input span{cursor:pointer;transition:transform .1s,color .1s}
   .stars-input span.on{color:var(--gold)}
   .stars-input span:active{transform:scale(1.25)}
@@ -105,7 +105,7 @@
   .detail-photos figcaption{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-top:6px;font-weight:600}
   .detail-brand{color:var(--gold);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
   .detail-name{font-size:27px;font-weight:700;margin:3px 0 8px;line-height:1.15;text-wrap:balance}
-  .detail-stars{font-size:22px;color:var(--gold);letter-spacing:3px;margin-bottom:18px}
+  .detail-stars{font-size:20px;color:var(--gold);letter-spacing:1.5px;margin-bottom:18px}
   .detail-stars .off{color:#54412a}
   .notes-block{background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;padding:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
   .notes-block .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:block;font-weight:600}
@@ -247,7 +247,7 @@
     <div class="field">
       <label>Your rating</label>
       <div class="stars-input" id="starsInput">
-        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span><span data-v="6">★</span><span data-v="7">★</span><span data-v="8">★</span><span data-v="9">★</span><span data-v="10">★</span>
       </div>
       <div class="rate-hint" id="rateHint">Tap to rate — tap the same star again to clear</div>
     </div>
@@ -321,7 +321,8 @@
   const photoURLs = new Map();   // storage path -> objectURL
 
   const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const stars = n => { n=+n||0; let h=""; for(let i=1;i<=5;i++) h+=`<span class="${i<=n?"":"off"}">★</span>`; return h; };
+  function ratingColor(n){ n=+n||0; if(n<=0) return null; if(n<=3) return "#d8463a"; if(n<=5) return "#e08a2e"; if(n<=8) return "#e3c23c"; return "#5faa4e"; }
+  function stars(n){ n=+n||0; const col=ratingColor(n); let h=""; for(let i=1;i<=10;i++){ h += i<=n ? `<span style="color:${col}">★</span>` : `<span class="off">★</span>`; } return h; }
   function emailFor(u){ return u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,"") + "@" + EMAIL_DOMAIN; }
 
   let toastT;
@@ -612,7 +613,16 @@
       slot.innerHTML=`<span class="tag">${label}</span><div class="ph-icon">📷</div><div class="ph-label">Photograph the ${which}</div>`;
     }
   }
-  function setStars(n){ currentRating=n; $("#starsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n)); $("#rateHint").textContent=n?`${n} of 5 stars`:"Tap to rate — tap the same star again to clear"; }
+  function setStars(n){
+    currentRating=n;
+    const col=ratingColor(n);
+    $("#starsInput").querySelectorAll("span").forEach(s=>{
+      const on=(+s.dataset.v)<=n;
+      s.classList.toggle("on",on);
+      s.style.color = on ? col : "";
+    });
+    $("#rateHint").textContent = n?`${n} of 10`:"Tap to rate — tap the same star again to clear";
+  }
 
   // Render the user-framed square region, enhanced and compressed
   function renderSquare(img, sx, sy, sSize){
