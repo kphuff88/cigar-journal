@@ -89,6 +89,9 @@ from any device.
 - [ ] **Re-run `supabase-setup.sql`** (or the short ALTER snippet) to add the new cigar
       columns: `profile`, `origin`, `wrapper`, `binder`, `filler`. Until then the app
       still saves, but those new fields won't be stored.
+- [ ] **Turn on "Scan band" (AI auto-fill)** — follow `SCAN_SETUP.md`: get a free
+      Google AI key, deploy the `scan-band` Edge Function in Supabase, and add the
+      `GEMINI_API_KEY` secret. Until then the ✨ Scan button shows "Scan unavailable".
 
 ---
 

@@ -56,6 +56,10 @@
   .install-bar .ib-detail ol{margin:4px 0 0;padding-left:20px}
   .install-bar .ib-detail li{margin:3px 0}
 
+  .scan-btn{width:100%;margin:2px 0 14px;padding:12px;border:1px solid var(--gold-dim);border-radius:12px;background:#2a1a10;color:var(--gold-soft);font-size:14.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .scan-btn:active{filter:brightness(.95)}
+  .scan-btn:disabled{opacity:.65;cursor:default}
+
   .stats-bar{font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;padding:9px 12px;margin:2px 0 12px;text-align:center}
   .stats-bar b{color:var(--gold);font-weight:600}
   .main-controls{display:flex;gap:10px;align-items:stretch;margin:0 0 14px}
@@ -341,6 +345,8 @@
     </div>
     <input type="file" id="fileBand" accept="image/*" capture="environment">
     <input type="file" id="fileCigar" accept="image/*" capture="environment">
+
+    <button type="button" class="scan-btn" id="scanBtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M12 3l1.6 3.9L17.5 8l-3.9 1.6L12 13l-1.6-3.4L6.5 8l3.9-1.1z"/><path d="M18 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Scan band to fill Brand &amp; Name</button>
 
     <div class="row">
       <div class="field"><label>Brand</label><input id="f_brand" placeholder="e.g. Padrón" autocomplete="off"></div>
@@ -968,6 +974,44 @@
   }
   function closeCropper(){ $("#cropOverlay").classList.remove("open"); crop=null; }
 
+  /* ---------------- Scan band (AI auto-fill) ---------------- */
+  async function scanBand(){
+    const btn=$("#scanBtn");
+    let blob = photoBand && photoBand.blob;
+    if(!blob && photoBand && photoBand.path){
+      try{ const { data } = await sb.storage.from(BUCKET).download(photoBand.path); blob=data; }catch(e){}
+    }
+    if(!blob){ toast("Photograph the band first"); $("#fileBand").click(); return; }
+    btn.disabled=true; const label=btn.innerHTML; btn.textContent="Reading the band…";
+    try{
+      const small=await scanShrink(blob);
+      const b64=await scanB64(small);
+      const { data, error }=await sb.functions.invoke("scan-band",{ body:{ image:b64, mimeType:"image/jpeg" } });
+      if(error) throw error;
+      if(!data || data.error) throw new Error((data&&data.error)||"no data");
+      let n=0;
+      const fill=(sel,val)=>{ const el=$(sel); if(el && val && !el.value.trim()){ el.value=val; n++; } };
+      fill("#f_brand",data.brand); fill("#f_name",data.name); fill("#f_size",data.size);
+      fill("#f_origin",data.origin); fill("#f_wrapper",data.wrapper);
+      toast(n ? "Filled from the band ✓ — double-check it" : "Couldn't read this band — type it in");
+    }catch(e){
+      toast("Scan unavailable. Check your connection or set up is incomplete");
+    }finally{ btn.disabled=false; btn.innerHTML=label; }
+  }
+  function scanB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(",")[1]||""); r.onerror=rej; r.readAsDataURL(blob); }); }
+  function scanImg(blob){ return new Promise((res,rej)=>{ const u=URL.createObjectURL(blob); const i=new Image(); i.onload=()=>{URL.revokeObjectURL(u);res(i);}; i.onerror=()=>{URL.revokeObjectURL(u);rej();}; i.src=u; }); }
+  async function scanShrink(blob){
+    try{
+      const img=await scanImg(blob); const max=1024;
+      let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+      const s=Math.min(1,max/Math.max(w,h)); w=Math.round(w*s); h=Math.round(h*s);
+      const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      const out=await new Promise(r=>cv.toBlob(r,"image/jpeg",0.85));
+      return out||blob;
+    }catch(e){ return blob; }
+  }
+
   /* ---------------- Detail ---------------- */
   function openDetail(id){
     const c=cigars.find(x=>x.id===id); if(!c) return; editingId=id;
@@ -1264,6 +1308,7 @@
   $("#nearMeBtn").addEventListener("click",nearMe);
   $("#shopSearch").addEventListener("input",renderShops);
   $("#editCancel").addEventListener("click",closeEditor);
+  $("#scanBtn").addEventListener("click",scanBand);
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
   $("#detailClose").addEventListener("click",closeDetail);
