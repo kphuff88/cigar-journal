@@ -1185,7 +1185,18 @@
     toast("Log exported");
   }
   function about(){
-    alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYou sign in with your email and a password. Your cigars, ratings, notes and photos are saved to your private cloud space, so they appear on any device you log in on. Only you can see your cigars.");
+    alert(
+"Cigar Log — your pocket humidor\n\n"+
+"Keep a personal log of the cigars you smoke. For each one you can save:\n"+
+"• Brand, name, size/vitola, origin, wrapper, binder, filler\n"+
+"• A photo of the band and of the cigar (with pinch-to-zoom cropping)\n"+
+"• A 10-star rating (color-coded) and a strength profile\n"+
+"• Price, how many you have in your humidor, favorite ♥, and notes\n\n"+
+"Your log shows quick stats (count, average rating, top cigar), a dropdown to jump to any cigar, and a favorites-only filter.\n\n"+
+"Cigar Shops: a shared directory anyone can add to. Tap 'Near me' to find shops by distance with map directions.\n\n"+
+"Share any cigar or shop with a friend by email, right from its page.\n\n"+
+"Sign-in & privacy: you log in with your email and password. Your cigars, photos, ratings and notes are saved to your own private cloud space and sync to every device you sign in on — only you can see them. (The shop directory is the one shared part.)\n\n"+
+"Export your whole log to a spreadsheet from this menu, and use 'Add to Home Screen' to run it like a native app.");
   }
   const isiOS=/iP(hone|ad|od)/.test(navigator.userAgent);
   const isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone===true;
