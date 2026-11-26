@@ -1,0 +1,15 @@
+{
+  "name": "Cigar Log",
+  "short_name": "Cigar Log",
+  "description": "Log cigars: band and cigar photos, 10-star ratings, strength profile, price, notes, and a shared cigar-shop directory.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1f140d",
+  "theme_color": "#2b1a10",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
