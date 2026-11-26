@@ -215,7 +215,22 @@
   .shop-card .sdist{font-size:12.5px;color:var(--gold);font-weight:700;white-space:nowrap}
   .shop-card .sactions{display:flex;gap:16px}
   .shop-card .sactions a,.shop-card .sactions button{font-size:13.5px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;font-weight:600;text-decoration:none}
+
+  /* Splash / launch screen */
+  #splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(120% 60% at 50% 0%,#33200f 0%,var(--bg) 60%);transition:opacity .5s ease;opacity:1}
+  #splash.hide{opacity:0;pointer-events:none}
+  .splash-icon{width:118px;height:118px;border-radius:28px;box-shadow:0 14px 40px #000a;animation:splashin .6s ease both}
+  .splash-name{margin-top:20px;font-size:26px;font-weight:700;letter-spacing:.5px;color:var(--text);animation:splashin .6s ease .08s both}
+  .splash-sub{margin-top:5px;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint);animation:splashin .6s ease .16s both}
+  @keyframes splashin{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.splash-icon,.splash-name,.splash-sub{animation:none}}
 </style>
+
+<div id="splash">
+  <img class="splash-icon" src="icon-512.png" alt="Cigar Log">
+  <div class="splash-name">Cigar Log</div>
+  <div class="splash-sub">Your pocket humidor</div>
+</div>
 
 <header>
   <div class="brandmark">
@@ -447,6 +462,12 @@
   let authMode = "login";
   const photoURLs = new Map();   // storage path -> objectURL
   let shops = [], myLoc = null, shopEditingId = null, shopLoc = null;
+  const splashStart = Date.now();
+  function hideSplash(){
+    const s=$("#splash"); if(!s || s.classList.contains("hide")) return;
+    const wait=Math.max(0, 900-(Date.now()-splashStart));
+    setTimeout(()=>{ s.classList.add("hide"); setTimeout(()=>{ s.style.display="none"; }, 550); }, wait);
+  }
 
   const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   function ratingColor(n){ n=+n||0; if(n<=0) return null; if(n<=3) return "#d8463a"; if(n<=5) return "#e08a2e"; if(n<=8) return "#e3c23c"; return "#5faa4e"; }
@@ -1201,13 +1222,14 @@
   window.addEventListener("pagehide",freePhotoURLs);
 
   /* ---------------- Boot ---------------- */
+  setTimeout(hideSplash, 3500); // safety net
   (async function init(){
     setAuthMode("login");
-    if(!sb){ showErr("Couldn't reach the backend service. Refresh to try again."); $("#gateOverlay").classList.add("open"); return; }
+    if(!sb){ showErr("Couldn't reach the backend service. Refresh to try again."); $("#gateOverlay").classList.add("open"); hideSplash(); return; }
     sb.auth.onAuthStateChange((_e,s)=>onSession(s));
-    const { data } = await sb.auth.getSession();
-    onSession(data.session);
+    try{ const { data } = await sb.auth.getSession(); onSession(data.session); }catch(e){ onSession(null); }
     if(isiOS) maybeShowInstallBar("ios");
+    hideSplash();
   })();
 })();
 </script>
