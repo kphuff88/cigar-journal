@@ -1,0 +1,113 @@
+# 📘 Cigar Log — Project Notes
+
+Plain-English notebook for the Cigar Log app. You don't need to be technical to use
+this — it's just so you always know what things are and where to find them.
+
+_Last updated: 2026-11-25_
+
+---
+
+## 🔗 Important links (bookmark these)
+
+| What | Link | What it's for |
+|---|---|---|
+| **Your live app** | https://kphuff88.github.io/cigar-journal/ | The actual app people open and use |
+| **Code storage (GitHub)** | https://github.com/kphuff88/cigar-journal | Where the app's files live online |
+| **Backend (Supabase)** | https://supabase.com/dashboard | Accounts, database, and photo storage |
+
+---
+
+## 🔑 Values & logins to keep
+
+- **Supabase Project URL:** `https://roemelqxveexgnylmfcm.supabase.co`
+- **Supabase Publishable key:** `sb_publishable_GilyxsrHXHekyrrzkjlNYw_-3Nq6Idf`
+  - This one is *safe to share* — it's meant to live inside the app code.
+- **Supabase database password:** _(the one you created and saved during setup — keep it in your password manager; it is NOT written here on purpose)_
+- **Supabase "secret" key:** never needed by us, never share it. Leave it alone.
+- **GitHub login:** your normal GitHub account (you signed into Supabase with it too).
+
+> 🔒 **Rule of thumb:** anything labeled *publishable* or *public* is safe. Anything
+> labeled *secret*, *service_role*, or *password* should never be shared or posted.
+
+---
+
+## 🧱 What each piece is (plain English)
+
+- **The app** — a single web page that runs in any phone or computer browser.
+- **GitHub** — like a filing cabinet in the cloud that stores the app's code and
+  publishes it as a website (that's the `github.io` link). *It does not touch your
+  OneDrive or anything else on your computer.*
+- **GitHub Pages** — the free service that turns the code in GitHub into the live
+  website. Costs **$0**.
+- **Supabase** — the "back office" that handles **user accounts**, the **database**
+  (everyone's cigar info), and **photo storage**. On the **Free** plan = **$0** until
+  the app gets real usage.
+- **OneDrive** — just where a copy of the files sits on *your* PC. **Private. Not
+  public. Not connected to the website.**
+
+---
+
+## 🗺️ What we've built so far (timeline)
+
+1. **First version** — a phone app to photograph a cigar band and log details. Saved
+   only on your own device.
+2. **Rebuilt from scratch** to your spec: **two photos** (band + cigar), brand, name,
+   a **5-star rating**, and **personal notes**.
+3. **Put it online** (free) at the GitHub Pages link above.
+4. **Added usernames** so each person has their own log on their device.
+5. **Phase 2 (in progress now):** real **accounts (username + password)** with cigars,
+   ratings, notes, and **photos saved in the cloud** so they sync across devices —
+   powered by the free Supabase backend you just set up.
+
+---
+
+## ✅ Where things stand right now
+
+**Phase 2 is being wired up.** To finish it, two quick one-time clicks in Supabase are
+needed (see next section). After those, you'll be able to create an account and log in
+from any device.
+
+---
+
+## 📋 To-do / open items
+
+- [ ] **Run the database setup** in Supabase (file: `supabase-setup.sql`). _See how-to below._
+- [ ] **Turn OFF email confirmation** in Supabase so username logins work. _See how-to below._
+- [ ] Test: create an account on the live app and add a cigar.
+
+---
+
+## 🛠️ How-to: the two Supabase steps
+
+**Step A — Create the database tables**
+1. Go to https://supabase.com/dashboard → open your **cigar-log** project.
+2. Left sidebar → **SQL Editor** → **New query**.
+3. Open the file `supabase-setup.sql` (in this project), copy **everything**, paste it in.
+4. Click **Run**. You should see "Success."
+
+**Step B — Allow username logins (turn off email confirmation)**
+1. Left sidebar → **Authentication**.
+2. Find **Sign In / Providers** (or **Providers**) → **Email**.
+3. Turn **OFF** the **"Confirm email"** toggle → **Save**.
+_(Why: our logins use usernames, not real emails, so there's no inbox to confirm.)_
+
+---
+
+## 💡 How to change the app later
+
+You don't edit anything yourself. Just tell Claude Code what you want (e.g. "add a
+price field," "change the colors," "let users see each other's cigars"). Claude edits
+the code and pushes it live — the website updates automatically in a minute or two.
+
+---
+
+## 💰 Cost summary
+
+- Website hosting (GitHub Pages): **$0**
+- Backend free tier (Supabase): **$0** until meaningful usage, then a few $/month.
+- Optional custom web address later (like `cigarlog.com`): ~$10–15 **per year**.
+
+---
+
+_This file is updated as the project grows. If something here looks out of date, ask
+Claude to refresh the notes._

@@ -5,7 +5,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cigar Log">
-<meta name="description" content="Log cigars from your phone: brand, name, band and cigar photos, a personal 5-star rating, and your own tasting notes.">
+<meta name="description" content="Log cigars online: create an account, then record brand, name, band and cigar photos, a personal 5-star rating, and notes that sync across your devices.">
 <title>Cigar Log</title>
 
 <style>
@@ -27,19 +27,9 @@
     padding-bottom:calc(96px + var(--safe-bottom));
     -webkit-text-size-adjust:100%;
   }
-  header{
-    position:sticky;top:0;z-index:20;
-    padding:calc(15px + var(--safe-top)) 18px 13px;
-    background:linear-gradient(180deg,#2a1a11 0%,#2a1a11f2 72%,#2a1a1100 100%);
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-  }
+  header{position:sticky;top:0;z-index:20;padding:calc(15px + var(--safe-top)) 18px 13px;background:linear-gradient(180deg,#2a1a11 0%,#2a1a11f2 72%,#2a1a1100 100%);display:flex;align-items:center;justify-content:space-between;gap:10px}
   .brandmark{display:flex;align-items:center;gap:10px}
-  .brandmark .mark{
-    width:34px;height:34px;border-radius:9px;flex:0 0 auto;
-    background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));
-    display:flex;align-items:center;justify-content:center;font-size:18px;
-    box-shadow:inset 0 1px 1px #fff5,0 2px 6px #0006;
-  }
+  .brandmark .mark{width:34px;height:34px;border-radius:9px;flex:0 0 auto;background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:inset 0 1px 1px #fff5,0 2px 6px #0006}
   header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.3px}
   header h1 small{display:block;font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.6px;margin-top:1px;text-transform:uppercase}
   .tools{display:flex;align-items:center;gap:8px;position:relative}
@@ -47,14 +37,13 @@
   .icon-btn{background:none;border:1px solid var(--line);color:var(--text);border-radius:10px;width:38px;height:34px;font-size:17px;cursor:pointer}
 
   main{padding:8px 16px 20px;max-width:680px;margin:0 auto}
-
   .search-wrap{position:relative;margin:4px 0 16px}
   .search-wrap input{width:100%;padding:12px 14px 12px 42px;border-radius:12px;border:1px solid var(--line);background:#241610;color:var(--text);font-size:16px}
-  .search-wrap input:focus{outline:2px solid var(--gold-dim);outline-offset:0}
+  .search-wrap input:focus{outline:2px solid var(--gold-dim)}
   .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
 
   .grid{display:flex;flex-direction:column;gap:12px}
-  .card{display:flex;gap:14px;padding:12px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line-soft);align-items:center;cursor:pointer;transition:transform .08s,border-color .15s}
+  .card{display:flex;gap:14px;padding:12px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line-soft);align-items:center;cursor:pointer;transition:transform .08s}
   .card:active{transform:scale(.985)}
   .card .thumb{width:72px;height:72px;border-radius:12px;flex:0 0 auto;background:#190e07 center/cover no-repeat;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:26px;color:#5a4028;overflow:hidden}
   .card .info{flex:1;min-width:0}
@@ -64,9 +53,12 @@
   .card .stars .off{color:#54412a}
   .card .norate{font-size:13px;color:var(--faint)}
 
-  .empty{text-align:center;color:var(--muted);padding:64px 22px}
+  .empty,.loading{text-align:center;color:var(--muted);padding:60px 22px}
   .empty .big{font-size:54px;margin-bottom:12px}
   .empty p{margin:7px 0;line-height:1.55}
+  .spinner{width:34px;height:34px;border:3px solid #ffffff22;border-top-color:var(--gold);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation:none}}
 
   .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + var(--safe-bottom));z-index:30;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;border:none;border-radius:999px;padding:15px 28px;font-size:16px;font-weight:700;box-shadow:0 10px 26px #0009;display:flex;align-items:center;gap:8px;cursor:pointer}
   .fab:active{filter:brightness(.95)}
@@ -84,8 +76,8 @@
   .photo-slot img{width:100%;height:100%;object-fit:cover}
   .photo-slot .ph-icon{font-size:30px;margin-bottom:6px}
   .photo-slot .ph-label{font-size:12.5px;font-weight:600;text-align:center;padding:0 8px}
-  .photo-slot .tag{position:absolute;top:7px;left:7px;background:#000000b0;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:6px;backdrop-filter:blur(3px)}
-  .photo-slot .clear{position:absolute;top:6px;right:6px;background:#000000b0;color:#fff;border:none;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+  .photo-slot .tag{position:absolute;top:7px;left:7px;background:#000000b0;color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:6px}
+  .photo-slot .clear{position:absolute;top:6px;right:6px;background:#000000b0;color:#fff;border:none;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
   .field{margin-bottom:15px}
   .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
@@ -102,6 +94,7 @@
   .rate-hint{font-size:12.5px;color:var(--faint);margin-top:6px}
 
   .save-btn{width:100%;padding:16px;border:none;border-radius:13px;font-size:17px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer;margin-top:10px}
+  .save-btn:disabled{opacity:.6}
   .save-btn:active{filter:brightness(.95)}
   .delete-btn{width:100%;padding:14px;border:1px solid var(--danger);border-radius:13px;font-size:15px;font-weight:600;background:transparent;color:var(--danger);cursor:pointer;margin-top:14px}
 
@@ -123,31 +116,33 @@
   .menu-pop button{display:flex;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:12px;font-size:15px;border-radius:8px;cursor:pointer;gap:11px;align-items:center}
   .menu-pop button:active{background:#ffffff12}
   .menu-pop hr{border:none;border-top:1px solid var(--line);margin:4px 2px}
-
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-bottom));z-index:80;background:#140d07;border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;box-shadow:0 6px 20px #0008}
-  .toast.show{opacity:1}
-  input[type=file]{display:none}
-
   .menu-user{font-size:12.5px;color:var(--faint);padding:8px 12px 10px;line-height:1.4}
   .menu-user b{color:var(--gold);font-weight:700}
 
-  /* Username gate */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-bottom));z-index:80;background:#140d07;border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:88%;text-align:center;box-shadow:0 6px 20px #0008}
+  .toast.show{opacity:1}
+  input[type=file]{display:none}
+
+  /* Auth gate */
   .gate{z-index:60;background:radial-gradient(120% 60% at 50% 0%,#33200f 0%,var(--bg) 60%)}
-  .gate .gate-card{max-width:400px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:calc(30px + var(--safe-top)) 24px calc(34px + var(--safe-bottom));text-align:center}
-  .gate-mark{width:64px;height:64px;border-radius:18px;margin:0 auto 20px;background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:inset 0 1px 2px #fff6,0 8px 22px #0008}
-  .gate h2{margin:0 0 8px;font-size:24px;letter-spacing:.3px}
-  .gate .sub{color:var(--muted);font-size:15px;line-height:1.55;margin:0 0 24px}
+  .gate .gate-card{max-width:400px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:calc(30px + var(--safe-top)) 24px calc(34px + var(--safe-bottom))}
+  .gate-mark{width:64px;height:64px;border-radius:18px;margin:0 auto 18px;background:linear-gradient(145deg,var(--gold-soft),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:inset 0 1px 2px #fff6,0 8px 22px #0008}
+  .gate h2{margin:0 0 6px;font-size:24px;letter-spacing:.3px;text-align:center}
+  .gate .sub{color:var(--muted);font-size:14.5px;line-height:1.5;margin:0 0 22px;text-align:center}
+  .tabs{display:flex;background:#241610;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:18px}
+  .tabs button{flex:1;padding:10px;border:none;background:none;color:var(--muted);font-size:15px;font-weight:600;border-radius:9px;cursor:pointer}
+  .tabs button.active{background:var(--panel2);color:var(--text)}
   .gate label{display:block;text-align:left;font-size:12.5px;color:var(--muted);font-weight:600;margin:0 0 6px}
-  .gate input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#241610;color:var(--text);font-size:17px;text-align:center}
+  .gate input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#241610;color:var(--text);font-size:16px;margin-bottom:14px}
   .gate input:focus{outline:2px solid var(--gold-dim)}
-  .gate .gate-go{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer;margin-top:14px}
-  .gate .gate-go:active{filter:brightness(.95)}
-  .gate .existing{margin-top:22px}
-  .gate .existing .elabel{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
-  .gate .profiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  .gate .profiles button{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px 14px;border-radius:999px;font-size:14px;cursor:pointer}
-  .gate .profiles button:active{background:#ffffff14}
-  .gate .fine{color:var(--faint);font-size:12px;line-height:1.5;margin-top:26px}
+  .gate .go{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer}
+  .gate .go:disabled{opacity:.6}
+  .gate .go:active{filter:brightness(.95)}
+  .gate .err{color:#f0a08c;background:#5a241c66;border:1px solid #8a3a2c;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45;margin-bottom:14px;display:none}
+  .gate .err.show{display:block}
+  .gate .fine{color:var(--faint);font-size:12px;line-height:1.5;margin-top:22px;text-align:center}
+  .setup-note{color:#e7c074;background:#3a2a1366;border:1px solid var(--gold-dim);border-radius:10px;padding:11px 13px;font-size:13px;line-height:1.5;margin-bottom:16px;display:none}
+  .setup-note.show{display:block}
 </style>
 
 <header>
@@ -160,13 +155,10 @@
     <button class="icon-btn" id="menuBtn" aria-label="Menu">⋮</button>
     <div class="menu-pop" id="menuPop">
       <div class="menu-user" id="menuUser"></div>
-      <button id="exportBtn">⬇️ Export / backup</button>
-      <button id="importBtn">⬆️ Import backup</button>
-      <hr>
       <button id="installBtn">📲 Add to Home Screen</button>
       <button id="aboutBtn">ℹ️ About this app</button>
       <hr>
-      <button id="switchUserBtn">🔄 Switch user</button>
+      <button id="logoutBtn">🔓 Log out</button>
     </div>
   </div>
 </header>
@@ -184,20 +176,28 @@
   Add Cigar
 </button>
 
-<!-- Username gate -->
+<!-- Auth gate -->
 <div class="overlay gate" id="gateOverlay">
   <div class="gate-card">
     <div class="gate-mark">🚬</div>
-    <h2 id="gateTitle">Welcome to Cigar Log</h2>
-    <p class="sub" id="gateSub">Pick a username to start your personal cigar log on this device.</p>
-    <label for="gateInput">Username</label>
-    <input id="gateInput" type="text" placeholder="e.g. kevin" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="24">
-    <button class="gate-go" id="gateGo">Start logging</button>
-    <div class="existing" id="gateExisting" style="display:none">
-      <div class="elabel">Or continue as</div>
-      <div class="profiles" id="gateProfiles"></div>
+    <h2 id="gateHead">Cigar Log</h2>
+    <p class="sub">Create an account or log in. Your cigars sync across every device you sign in on.</p>
+
+    <div class="tabs">
+      <button id="tabLogin" class="active">Log in</button>
+      <button id="tabSignup">Create account</button>
     </div>
-    <p class="fine">Your username and cigars are saved on <b>this device only</b> — there's no password and nothing is uploaded. (Accounts that work across devices come in a later version.)</p>
+
+    <div class="setup-note" id="setupNote"></div>
+    <div class="err" id="gateErr"></div>
+
+    <label for="authUser">Username</label>
+    <input id="authUser" type="text" placeholder="e.g. kevin" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="24">
+    <label for="authPass">Password</label>
+    <input id="authPass" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+
+    <button class="go" id="authGo">Log in</button>
+    <p class="fine" id="gateFine">Usernames and passwords are stored securely by your Supabase backend. Photos and ratings are saved to your private cloud space.</p>
   </div>
 </div>
 
@@ -257,391 +257,319 @@
   </div>
 </div>
 
-<input type="file" id="importInput" accept="application/json,.json">
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   "use strict";
   const $ = s => document.querySelector(s);
-  const DB_NAME = "cigarlog", STORE = "cigars", DB_VER = 1;
-  const USER_KEY = "cigarlog_user";
 
-  let cigars = [];          // in-memory cache of ALL records on this device
-  let currentUser = null;   // the signed-in username (device-local)
+  /* ---- Supabase config ---- */
+  const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_GilyxsrHXHekyrrzkjlNYw_-3Nq6Idf";
+  const EMAIL_DOMAIN = "cigarlog.app";   // synthetic address derived from username
+  const BUCKET = "photos";
+
+  let sb = null;
+  if(window.supabase && window.supabase.createClient){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true}});
+  }
+
+  /* ---- State ---- */
+  let session = null, username = "";
+  let cigars = [];
   let editingId = null;
-  let photoBand = null, photoCigar = null;   // Blobs (or null)
+  let photoBand = null, photoCigar = null;   // {blob} new uploads, or {path} existing, or null
   let currentRating = 0;
-  const urlCache = new Map();  // id/field -> objectURL for cleanup
+  let authMode = "login";
+  const photoURLs = new Map();   // storage path -> objectURL
 
-  const sameUser = (a,b)=>(a||"").trim().toLowerCase()===(b||"").trim().toLowerCase();
-  function mine(){ return cigars.filter(c=>sameUser(c.owner,currentUser)); }
+  const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const stars = n => { n=+n||0; let h=""; for(let i=1;i<=5;i++) h+=`<span class="${i<=n?"":"off"}">★</span>`; return h; };
+  function emailFor(u){ return u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,"") + "@" + EMAIL_DOMAIN; }
 
-  /* ---------------- IndexedDB ---------------- */
-  function openDB(){
-    return new Promise((resolve,reject)=>{
-      const req = indexedDB.open(DB_NAME, DB_VER);
-      req.onupgradeneeded = ()=>{
-        const db = req.result;
-        if(!db.objectStoreNames.contains(STORE)){
-          db.createObjectStore(STORE, {keyPath:"id"});
+  let toastT;
+  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400); }
+
+  /* ---------------- Auth ---------------- */
+  function setAuthMode(mode){
+    authMode = mode;
+    $("#tabLogin").classList.toggle("active", mode==="login");
+    $("#tabSignup").classList.toggle("active", mode==="signup");
+    $("#authGo").textContent = mode==="login" ? "Log in" : "Create account";
+    $("#authPass").setAttribute("autocomplete", mode==="login" ? "current-password" : "new-password");
+    $("#authPass").placeholder = mode==="login" ? "Your password" : "At least 6 characters";
+    showErr("");
+  }
+  function showErr(msg){ const e=$("#gateErr"); e.textContent=msg; e.classList.toggle("show", !!msg); }
+  function showSetupNote(msg){ const n=$("#setupNote"); n.textContent=msg; n.classList.toggle("show", !!msg); }
+
+  async function doAuth(){
+    const u = $("#authUser").value.trim();
+    const p = $("#authPass").value;
+    showErr(""); showSetupNote("");
+    if(!/^[a-zA-Z0-9._-]{3,24}$/.test(u)){ showErr("Username must be 3–24 characters: letters, numbers, dot, dash or underscore."); return; }
+    if(p.length<6){ showErr("Password must be at least 6 characters."); return; }
+    if(!sb){ showErr("Couldn't load the backend. Check your connection and refresh."); return; }
+
+    const btn=$("#authGo"); btn.disabled=true; btn.textContent = authMode==="login"?"Logging in…":"Creating…";
+    try{
+      const email = emailFor(u);
+      if(authMode==="signup"){
+        const { data, error } = await sb.auth.signUp({ email, password:p, options:{ data:{ username:u } } });
+        if(error) throw error;
+        if(!data.session){
+          // Email confirmation is still ON for this project — sign-in blocked.
+          showSetupNote("Account created, but sign-in needs the project's email confirmation turned OFF (one toggle in Supabase → Authentication). Once that's done you can log in.");
+          setAuthMode("login");
+          return;
         }
-      };
-      req.onsuccess = ()=>resolve(req.result);
-      req.onerror = ()=>reject(req.error);
-    });
-  }
-  async function dbAll(){
-    const db = await openDB();
-    return new Promise((resolve,reject)=>{
-      const tx = db.transaction(STORE,"readonly");
-      const req = tx.objectStore(STORE).getAll();
-      req.onsuccess = ()=>resolve(req.result||[]);
-      req.onerror = ()=>reject(req.error);
-    });
-  }
-  async function dbPut(rec){
-    const db = await openDB();
-    return new Promise((resolve,reject)=>{
-      const tx = db.transaction(STORE,"readwrite");
-      tx.objectStore(STORE).put(rec);
-      tx.oncomplete = ()=>resolve();
-      tx.onerror = ()=>reject(tx.error);
-    });
-  }
-  async function dbDelete(id){
-    const db = await openDB();
-    return new Promise((resolve,reject)=>{
-      const tx = db.transaction(STORE,"readwrite");
-      tx.objectStore(STORE).delete(id);
-      tx.oncomplete = ()=>resolve();
-      tx.onerror = ()=>reject(tx.error);
-    });
+      }else{
+        const { error } = await sb.auth.signInWithPassword({ email, password:p });
+        if(error) throw error;
+      }
+      // session established via onAuthStateChange
+    }catch(err){
+      const m=(err&&err.message)||"Something went wrong.";
+      if(/already registered|already exists/i.test(m)) showErr("That username is taken. Try logging in instead.");
+      else if(/invalid login credentials/i.test(m)) showErr("Wrong username or password.");
+      else showErr(m);
+    }finally{
+      btn.disabled=false; btn.textContent = authMode==="login"?"Log in":"Create account";
+    }
   }
 
-  function uid(){ return "c"+Date.now().toString(36)+Math.floor(Math.random()*1e5).toString(36); }
-  function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-  function stars(n){ n=+n||0; let h=""; for(let i=1;i<=5;i++) h+=`<span class="${i<=n?"":"off"}">★</span>`; return h; }
-
-  function objURL(blob, key){
-    if(!blob) return "";
-    if(urlCache.has(key)) return urlCache.get(key);
-    const u = URL.createObjectURL(blob);
-    urlCache.set(key, u);
-    return u;
+  async function logout(){
+    if(sb) await sb.auth.signOut();
   }
-  function freeURLs(){ urlCache.forEach(u=>URL.revokeObjectURL(u)); urlCache.clear(); }
 
-  /* ---------------- Image processing ---------------- */
+  async function onSession(s){
+    session = s;
+    if(s){
+      username = (s.user.user_metadata && s.user.user_metadata.username) || (s.user.email||"").split("@")[0];
+      $("#userLine").textContent = "@"+username;
+      $("#menuUser").innerHTML = `Signed in as <b>${esc(username)}</b>`;
+      $("#gateOverlay").classList.remove("open");
+      $("#authPass").value="";
+      await loadCigars();
+    }else{
+      username=""; cigars=[]; freePhotoURLs();
+      $("#userLine").textContent = "Your pocket humidor";
+      $("#menuUser").innerHTML = "";
+      $("#list").innerHTML="";
+      $("#editorOverlay").classList.remove("open");
+      $("#detailOverlay").classList.remove("open");
+      $("#countPill").textContent="0";
+      $("#authUser").value=""; $("#authPass").value="";
+      setAuthMode("login");
+      $("#gateOverlay").classList.add("open");
+    }
+  }
+
+  /* ---------------- Photos ---------------- */
   function processImage(file){
     return new Promise((resolve,reject)=>{
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        const img = new Image();
-        img.onload = ()=>{
-          const maxDim = 1100;
-          let {width,height} = img;
-          const scale = Math.min(1, maxDim/Math.max(width,height));
-          width = Math.round(width*scale); height = Math.round(height*scale);
-          const cv = document.createElement("canvas");
-          cv.width=width; cv.height=height;
+      const r=new FileReader();
+      r.onload=()=>{ const img=new Image();
+        img.onload=()=>{ const max=1100; let {width,height}=img; const s=Math.min(1,max/Math.max(width,height));
+          width=Math.round(width*s); height=Math.round(height*s);
+          const cv=document.createElement("canvas"); cv.width=width; cv.height=height;
           cv.getContext("2d").drawImage(img,0,0,width,height);
-          cv.toBlob(b=> b?resolve(b):reject(new Error("encode")), "image/jpeg", 0.7);
+          cv.toBlob(b=>b?resolve(b):reject(new Error("encode")),"image/jpeg",0.7);
         };
-        img.onerror = reject;
-        img.src = reader.result;
+        img.onerror=reject; img.src=r.result;
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      r.onerror=reject; r.readAsDataURL(file);
     });
   }
-
-  /* ---------------- List ---------------- */
-  function render(){
-    const q = $("#search").value.trim().toLowerCase();
-    const owned = mine();
-    let items = owned.slice().sort((a,b)=>(b.updated||0)-(a.updated||0));
-    if(q){
-      items = items.filter(c => ((c.brand||"")+" "+(c.name||"")+" "+(c.notes||"")).toLowerCase().includes(q));
+  async function photoURL(path){
+    if(!path) return "";
+    if(photoURLs.has(path)) return photoURLs.get(path);
+    try{
+      const { data, error } = await sb.storage.from(BUCKET).download(path);
+      if(error||!data) return "";
+      const url=URL.createObjectURL(data); photoURLs.set(path,url); return url;
+    }catch(e){ return ""; }
+  }
+  function freePhotoURLs(){ photoURLs.forEach(u=>URL.revokeObjectURL(u)); photoURLs.clear(); }
+  async function hydratePhotos(root){
+    for(const el of root.querySelectorAll("[data-photo]")){
+      const path=el.getAttribute("data-photo"); if(!path) continue;
+      const url=await photoURL(path); if(!url) continue;
+      if(el.tagName==="IMG") el.src=url; else el.style.backgroundImage=`url('${url}')`;
     }
-    $("#countPill").textContent = owned.length;
+  }
 
-    const list = $("#list");
-    if(!items.length){
-      list.innerHTML = `<div class="empty">
-        <div class="big">🚬</div>
-        ${owned.length
-          ? "<p>No cigars match that search.</p>"
-          : "<p><b>No cigars logged yet.</b></p><p>Tap <b>Add Cigar</b> to snap the band and the cigar, rate it, and jot your notes.</p>"}
-      </div>`;
+  /* ---------------- Data ---------------- */
+  async function loadCigars(){
+    $("#list").innerHTML = `<div class="loading"><div class="spinner"></div>Loading your cigars…</div>`;
+    const { data, error } = await sb.from("cigars").select("*").order("updated_at",{ascending:false});
+    if(error){
+      if(/relation .*cigars.* does not exist|not find the table|schema cache/i.test(error.message)){
+        $("#list").innerHTML = `<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then refresh.</p></div>`;
+      }else{
+        $("#list").innerHTML = `<div class="empty"><div class="big">⚠️</div><p>Couldn't load cigars.</p><p>${esc(error.message)}</p></div>`;
+      }
       return;
     }
-    list.innerHTML = items.map(c=>{
-      const thumbBlob = c.band || c.cigar;
-      const thumb = thumbBlob
-        ? `<div class="thumb" style="background-image:url('${objURL(thumbBlob, c.id+":thumb")}')"></div>`
-        : `<div class="thumb">🚬</div>`;
-      return `<div class="card" data-id="${c.id}">
-        ${thumb}
-        <div class="info">
-          <div class="brand">${esc(c.brand)||"&nbsp;"}</div>
-          <div class="name">${esc(c.name)||"Unnamed cigar"}</div>
-          ${c.rating?`<div class="stars">${stars(c.rating)}</div>`:`<div class="norate">Not rated</div>`}
-        </div>
-      </div>`;
-    }).join("");
-    list.querySelectorAll(".card").forEach(el=>el.addEventListener("click",()=>openDetail(el.dataset.id)));
-  }
-
-  /* ---------------- Editor ---------------- */
-  function openEditor(id){
-    editingId = id || null;
-    const c = id ? cigars.find(x=>x.id===id) : null;
-    $("#editTitle").textContent = c ? "Edit Cigar" : "Add Cigar";
-    $("#deleteBtn").style.display = c ? "block" : "none";
-
-    photoBand  = c ? (c.band||null)  : null;
-    photoCigar = c ? (c.cigar||null) : null;
-    currentRating = c ? (c.rating||0) : 0;
-
-    paintSlot("slotBand","Band",photoBand,"band");
-    paintSlot("slotCigar","Cigar",photoCigar,"cigar");
-    setStars(currentRating);
-
-    $("#f_brand").value = c ? c.brand||"" : "";
-    $("#f_name").value  = c ? c.name||""  : "";
-    $("#f_notes").value = c ? c.notes||"" : "";
-
-    $("#detailOverlay").classList.remove("open");
-    const ov = $("#editorOverlay"); ov.classList.add("open"); ov.scrollTop = 0;
-  }
-  function closeEditor(){ $("#editorOverlay").classList.remove("open"); editingId=null; }
-
-  function paintSlot(slotId,label,blob,which){
-    const slot = $("#"+slotId);
-    if(blob){
-      slot.innerHTML = `<span class="tag">${label}</span>
-        <button class="clear" data-which="${which}" aria-label="Remove">✕</button>
-        <img src="${objURL(blob, "edit:"+which)}" alt="${label} photo">`;
-      slot.querySelector(".clear").addEventListener("click",e=>{
-        e.stopPropagation();
-        if(which==="band") photoBand=null; else photoCigar=null;
-        urlCache.delete("edit:"+which);
-        paintSlot(slotId,label,null,which);
-      });
-    }else{
-      slot.innerHTML = `<span class="tag">${label}</span>
-        <div class="ph-icon">📷</div><div class="ph-label">Photograph the ${which}</div>`;
-    }
-  }
-  function setStars(n){
-    currentRating = n;
-    $("#starsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n));
-    $("#rateHint").textContent = n ? `${n} of 5 stars` : "Tap to rate — tap the same star again to clear";
-  }
-
-  async function handleFile(which, file){
-    if(!file) return;
-    toast("Processing photo…");
-    try{
-      const blob = await processImage(file);
-      if(which==="band"){ photoBand=blob; paintSlot("slotBand","Band",blob,"band"); }
-      else { photoCigar=blob; paintSlot("slotCigar","Cigar",blob,"cigar"); }
-      toast("Photo added");
-    }catch(e){ toast("Couldn't load that image"); }
+    cigars = data||[];
+    render();
   }
 
   async function saveCigar(){
-    const brand = $("#f_brand").value.trim();
-    const name  = $("#f_name").value.trim();
-    const notes = $("#f_notes").value.trim();
-    if(!brand && !name && !notes && !photoBand && !photoCigar){
-      toast("Add a photo or some details first"); return;
-    }
-    const base = editingId ? cigars.find(x=>x.id===editingId) : null;
-    const rec = {
-      id: editingId || uid(),
-      owner: base ? (base.owner||currentUser) : currentUser,
-      brand, name, notes,
-      rating: currentRating,
-      band: photoBand, cigar: photoCigar,
-      created: base ? base.created : Date.now(),
-      updated: Date.now()
-    };
+    const brand=$("#f_brand").value.trim(), name=$("#f_name").value.trim(), notes=$("#f_notes").value.trim();
+    if(!brand && !name && !notes && !photoBand && !photoCigar){ toast("Add a photo or some details first"); return; }
+    const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Saving…";
     try{
-      await dbPut(rec);
-    }catch(e){ toast("Couldn't save — storage error"); return; }
-    const i = cigars.findIndex(x=>x.id===rec.id);
-    if(i>-1) cigars[i]=rec; else cigars.push(rec);
-    // invalidate cached thumb url
-    [rec.id+":thumb","edit:band","edit:cigar"].forEach(k=>{
-      if(urlCache.has(k)){ URL.revokeObjectURL(urlCache.get(k)); urlCache.delete(k); }
-    });
-    render();
-    closeEditor();
-    toast("Saved ✓");
+      const uid=session.user.id;
+      const existing = editingId ? cigars.find(c=>c.id===editingId) : null;
+      const id = editingId || (crypto.randomUUID ? crypto.randomUUID() : "c"+Date.now()+Math.random().toString(36).slice(2));
+
+      let band_path  = existing ? existing.band_path  : null;
+      let cigar_path = existing ? existing.cigar_path : null;
+
+      if(photoBand && photoBand.blob){
+        band_path = `${uid}/${id}-band.jpg`;
+        const { error } = await sb.storage.from(BUCKET).upload(band_path, photoBand.blob, {upsert:true, contentType:"image/jpeg"});
+        if(error) throw error;
+      }else if(photoBand===null){ band_path=null; }
+
+      if(photoCigar && photoCigar.blob){
+        cigar_path = `${uid}/${id}-cigar.jpg`;
+        const { error } = await sb.storage.from(BUCKET).upload(cigar_path, photoCigar.blob, {upsert:true, contentType:"image/jpeg"});
+        if(error) throw error;
+      }else if(photoCigar===null){ cigar_path=null; }
+
+      const row = { id, user_id:uid, brand, name, rating:currentRating, notes, band_path, cigar_path, updated_at:new Date().toISOString() };
+      if(!existing) row.created_at = new Date().toISOString();
+      const { error } = await sb.from("cigars").upsert(row);
+      if(error) throw error;
+
+      // refresh cache entry so changed photos reload
+      [band_path,cigar_path].forEach(p=>{ if(p&&photoURLs.has(p)){ URL.revokeObjectURL(photoURLs.get(p)); photoURLs.delete(p); } });
+      const i=cigars.findIndex(c=>c.id===id);
+      if(i>-1) cigars[i]=Object.assign(cigars[i],row); else cigars.unshift(row);
+      render(); closeEditor(); toast("Saved ✓");
+    }catch(err){
+      toast((err&&err.message)||"Couldn't save");
+    }finally{ btn.disabled=false; btn.textContent="Save Cigar"; }
   }
 
   async function deleteCigar(){
     if(!editingId) return;
     if(!confirm("Delete this cigar from your log?")) return;
-    try{ await dbDelete(editingId); }catch(e){ toast("Couldn't delete"); return; }
-    cigars = cigars.filter(x=>x.id!==editingId);
-    render(); closeEditor(); toast("Deleted");
+    const c=cigars.find(x=>x.id===editingId);
+    try{
+      const paths=[c&&c.band_path, c&&c.cigar_path].filter(Boolean);
+      if(paths.length) await sb.storage.from(BUCKET).remove(paths);
+      const { error } = await sb.from("cigars").delete().eq("id",editingId);
+      if(error) throw error;
+      cigars=cigars.filter(x=>x.id!==editingId);
+      render(); closeEditor(); toast("Deleted");
+    }catch(err){ toast((err&&err.message)||"Couldn't delete"); }
+  }
+
+  /* ---------------- List ---------------- */
+  function render(){
+    const q=$("#search").value.trim().toLowerCase();
+    let items=cigars.slice();
+    if(q) items=items.filter(c=>((c.brand||"")+" "+(c.name||"")+" "+(c.notes||"")).toLowerCase().includes(q));
+    $("#countPill").textContent=cigars.length;
+    const list=$("#list");
+    if(!items.length){
+      list.innerHTML=`<div class="empty"><div class="big">🚬</div>${cigars.length?"<p>No cigars match that search.</p>":"<p><b>No cigars logged yet.</b></p><p>Tap <b>Add Cigar</b> to snap the band and the cigar, rate it, and jot your notes.</p>"}</div>`;
+      return;
+    }
+    list.innerHTML=items.map(c=>{
+      const p=c.band_path||c.cigar_path;
+      const thumb=p?`<div class="thumb" data-photo="${esc(p)}"></div>`:`<div class="thumb">🚬</div>`;
+      return `<div class="card" data-id="${esc(c.id)}">${thumb}
+        <div class="info">
+          <div class="brand">${esc(c.brand)||"&nbsp;"}</div>
+          <div class="name">${esc(c.name)||"Unnamed cigar"}</div>
+          ${c.rating?`<div class="stars">${stars(c.rating)}</div>`:`<div class="norate">Not rated</div>`}
+        </div></div>`;
+    }).join("");
+    list.querySelectorAll(".card").forEach(el=>el.addEventListener("click",()=>openDetail(el.dataset.id)));
+    hydratePhotos(list);
+  }
+
+  /* ---------------- Editor ---------------- */
+  function openEditor(id){
+    editingId=id||null;
+    const c=id?cigars.find(x=>x.id===id):null;
+    $("#editTitle").textContent=c?"Edit Cigar":"Add Cigar";
+    $("#deleteBtn").style.display=c?"block":"none";
+    photoBand  = c&&c.band_path  ? {path:c.band_path}  : null;
+    photoCigar = c&&c.cigar_path ? {path:c.cigar_path} : null;
+    currentRating=c?(c.rating||0):0;
+    paintSlot("slotBand","Band",photoBand,"band");
+    paintSlot("slotCigar","Cigar",photoCigar,"cigar");
+    setStars(currentRating);
+    $("#f_brand").value=c?c.brand||"":"";
+    $("#f_name").value =c?c.name||"":"";
+    $("#f_notes").value=c?c.notes||"":"";
+    $("#detailOverlay").classList.remove("open");
+    const ov=$("#editorOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+  }
+  function closeEditor(){ $("#editorOverlay").classList.remove("open"); editingId=null; }
+
+  async function paintSlot(slotId,label,photo,which){
+    const slot=$("#"+slotId);
+    let src="";
+    if(photo && photo.blob) src=URL.createObjectURL(photo.blob);
+    else if(photo && photo.path) src=await photoURL(photo.path);
+    if(src){
+      slot.innerHTML=`<span class="tag">${label}</span><button class="clear" aria-label="Remove">✕</button><img src="${src}" alt="${label} photo">`;
+      slot.querySelector(".clear").addEventListener("click",e=>{ e.stopPropagation(); if(which==="band")photoBand=null; else photoCigar=null; paintSlot(slotId,label,null,which); });
+    }else{
+      slot.innerHTML=`<span class="tag">${label}</span><div class="ph-icon">📷</div><div class="ph-label">Photograph the ${which}</div>`;
+    }
+  }
+  function setStars(n){ currentRating=n; $("#starsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n)); $("#rateHint").textContent=n?`${n} of 5 stars`:"Tap to rate — tap the same star again to clear"; }
+
+  async function handleFile(which,file){
+    if(!file) return;
+    toast("Processing photo…");
+    try{ const blob=await processImage(file);
+      if(which==="band"){ photoBand={blob}; paintSlot("slotBand","Band",photoBand,"band"); }
+      else { photoCigar={blob}; paintSlot("slotCigar","Cigar",photoCigar,"cigar"); }
+      toast("Photo added");
+    }catch(e){ toast("Couldn't load that image"); }
   }
 
   /* ---------------- Detail ---------------- */
   function openDetail(id){
-    const c = cigars.find(x=>x.id===id);
-    if(!c) return;
-    editingId = id;
-    const frame = (blob,which,label)=>`<figure>
-      <div class="frame">${blob?`<img src="${objURL(blob,id+":d"+which)}" alt="${label}">`:"🚬"}</div>
-      <figcaption>${label}</figcaption></figure>`;
-    const d = c.created ? new Date(c.created) : null;
-    $("#detailBody").innerHTML = `
-      <div class="detail-photos">
-        ${frame(c.band,"b","Band")}
-        ${frame(c.cigar,"c","Cigar")}
-      </div>
+    const c=cigars.find(x=>x.id===id); if(!c) return; editingId=id;
+    const frame=(path,label)=>`<figure><div class="frame">${path?`<img data-photo="${esc(path)}" alt="${label}">`:"🚬"}</div><figcaption>${label}</figcaption></figure>`;
+    const d=c.created_at?new Date(c.created_at):null;
+    $("#detailBody").innerHTML=`
+      <div class="detail-photos">${frame(c.band_path,"Band")}${frame(c.cigar_path,"Cigar")}</div>
       <div class="detail-brand">${esc(c.brand)||""}</div>
       <div class="detail-name">${esc(c.name)||"Unnamed cigar"}</div>
       <div class="detail-stars">${c.rating?stars(c.rating):'<span style="font-size:14px;color:var(--faint);letter-spacing:0">Not rated</span>'}</div>
       ${c.notes?`<div class="notes-block"><span class="k">Personal notes</span>${esc(c.notes)}</div>`:`<div class="notes-block" style="color:var(--faint)">No notes yet.</div>`}
-      ${d?`<div class="detail-date">Logged ${d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</div>`:""}
-    `;
-    const ov = $("#detailOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+      ${d?`<div class="detail-date">Logged ${d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</div>`:""}`;
+    const ov=$("#detailOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+    hydratePhotos($("#detailBody"));
   }
   function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
 
-  /* ---------------- Backup / Restore ---------------- */
-  function blobToDataURL(blob){
-    return new Promise(res=>{ if(!blob) return res(null); const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(blob); });
-  }
-  function dataURLToBlob(dataURL){
-    if(!dataURL) return null;
-    const [head,b64] = dataURL.split(",");
-    const mime = (head.match(/:(.*?);/)||[])[1] || "image/jpeg";
-    const bin = atob(b64); const arr = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-    return new Blob([arr],{type:mime});
-  }
-  async function exportData(){
-    const owned = mine();
-    if(!owned.length){ toast("Nothing to back up yet"); return; }
-    toast("Preparing backup…");
-    const out = [];
-    for(const c of owned){
-      out.push({
-        id:c.id, brand:c.brand, name:c.name, notes:c.notes, rating:c.rating,
-        created:c.created, updated:c.updated,
-        band: await blobToDataURL(c.band),
-        cigar: await blobToDataURL(c.cigar)
-      });
-    }
-    const json = JSON.stringify({app:"Cigar Log",version:1,user:currentUser,exported:new Date().toISOString(),cigars:out});
-    const filename = "cigar-log-backup-"+new Date().toISOString().slice(0,10)+".json";
-
-    if(window.claude && typeof window.claude.use==="function"){
-      try{
-        const dl = await window.claude.use("downloads");
-        if(dl){ await dl.save({filename, data:json}); toast("Backup saved"); return; }
-      }catch(err){ if(err && err.code==="declined") return; }
-    }
-    const url = URL.createObjectURL(new Blob([json],{type:"application/json"}));
-    const a = document.createElement("a"); a.href=url; a.download=filename;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),2000);
-    toast("Backup downloaded");
-  }
-  function importData(file){
-    const r = new FileReader();
-    r.onload = async ()=>{
-      try{
-        const obj = JSON.parse(r.result);
-        const incoming = Array.isArray(obj)?obj:obj.cigars;
-        if(!Array.isArray(incoming)) throw 0;
-        const existing = new Set(cigars.map(c=>c.id));
-        let added=0;
-        for(const c of incoming){
-          const id = c.id || uid();
-          if(existing.has(id)) continue;
-          const rec = {
-            id, owner: currentUser, brand:c.brand||"", name:c.name||"", notes:c.notes||"",
-            rating:c.rating||0, created:c.created||Date.now(), updated:c.updated||Date.now(),
-            band: dataURLToBlob(c.band), cigar: dataURLToBlob(c.cigar)
-          };
-          await dbPut(rec); cigars.push(rec); existing.add(id); added++;
-        }
-        render();
-        toast(added?`Imported ${added} cigars`:"Already up to date");
-      }catch(e){ toast("That file didn't look right"); }
-    };
-    r.readAsText(file);
-  }
-
-  /* ---------------- Misc UI ---------------- */
-  let toastT;
-  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1900); }
-
-  const isiOS = /iP(hone|ad|od)/.test(navigator.userAgent);
-  function installHelp(){
-    alert(isiOS
-      ? "To install on iPhone:\n\n1. Tap the Share button (□↑) at the bottom of Safari.\n2. Choose “Add to Home Screen.”\n\nIt will open like a normal app, and your cigars stay saved on this phone."
-      : "To install on Android:\n\n1. Tap the ⋮ menu in Chrome.\n2. Choose “Add to Home screen” / “Install app.”\n\nIt will open like a normal app, and your cigars stay saved on this phone.");
-  }
   function about(){
-    alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYou set up a username to use the app. Right now that username and your cigars live privately on THIS device — there’s no password and nothing is uploaded, so the username doesn’t sync across devices yet. Use the ⋮ menu to export a backup you can move to another phone.\n\nA future version will add real online accounts so your log follows you between devices.");
+    alert("Cigar Log\n\nLog cigars you smoke: brand and name, a photo of the band and the cigar, your own 5-star rating, and personal notes.\n\nYou sign in with a username and password. Your cigars, ratings, notes and photos are saved to your private cloud space, so they appear on any device you log in on. Only you can see your cigars.");
   }
-
-  /* ---------------- Username (device-local profiles) ---------------- */
-  function knownUsers(){
-    const seen = new Map();
-    cigars.forEach(c=>{ const o=(c.owner||"").trim(); if(o && !seen.has(o.toLowerCase())) seen.set(o.toLowerCase(),o); });
-    return [...seen.values()].sort((a,b)=>a.localeCompare(b));
-  }
-  function updateUserUI(){
-    $("#userLine").textContent = currentUser ? "@"+currentUser : "Your pocket humidor";
-    $("#menuUser").innerHTML = currentUser ? `Signed in as <b>${esc(currentUser)}</b>` : "";
-  }
-  function showGate(){
-    $("#editorOverlay").classList.remove("open");
-    $("#detailOverlay").classList.remove("open");
-    $("#gateInput").value = "";
-    const users = knownUsers();
-    const ex = $("#gateExisting");
-    if(users.length){
-      ex.style.display = "block";
-      $("#gateProfiles").innerHTML = users.map(u=>`<button data-u="${esc(u)}">@${esc(u)}</button>`).join("");
-      $("#gateProfiles").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>doLogin(b.dataset.u)));
-    }else{ ex.style.display="none"; }
-    $("#gateOverlay").classList.add("open");
-    setTimeout(()=>$("#gateInput").focus(),60);
-  }
-  function doLogin(name){
-    const clean = (name||"").trim().replace(/\s+/g," ");
-    if(!clean){ toast("Enter a username"); return; }
-    if(clean.length>24){ toast("Keep it under 24 characters"); return; }
-    currentUser = clean;
-    try{ localStorage.setItem(USER_KEY, clean); }catch(e){}
-    $("#gateOverlay").classList.remove("open");
-    updateUserUI();
-    $("#search").value = "";
-    render();
-    toast("Welcome, "+clean);
-  }
-  function signOut(){
-    currentUser = null;
-    try{ localStorage.removeItem(USER_KEY); }catch(e){}
-    updateUserUI();
-    showGate();
-  }
+  const isiOS=/iP(hone|ad|od)/.test(navigator.userAgent);
+  function installHelp(){ alert(isiOS?"To install on iPhone:\n\n1. Tap the Share button (□↑) at the bottom of Safari.\n2. Choose “Add to Home Screen.”":"To install on Android:\n\n1. Tap the ⋮ menu in Chrome.\n2. Choose “Add to Home screen” / “Install app.”"); }
 
   /* ---------------- Wire up ---------------- */
-  $("#addBtn").addEventListener("click",()=>{ if(!currentUser){ showGate(); return; } openEditor(null); });
-  $("#gateGo").addEventListener("click",()=>doLogin($("#gateInput").value));
-  $("#gateInput").addEventListener("keydown",e=>{ if(e.key==="Enter") doLogin($("#gateInput").value); });
-  $("#switchUserBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); signOut(); });
+  $("#tabLogin").addEventListener("click",()=>setAuthMode("login"));
+  $("#tabSignup").addEventListener("click",()=>setAuthMode("signup"));
+  $("#authGo").addEventListener("click",doAuth);
+  $("#authPass").addEventListener("keydown",e=>{ if(e.key==="Enter") doAuth(); });
+  $("#authUser").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#authPass").focus(); });
+
+  $("#addBtn").addEventListener("click",()=>{ if(!session){ $("#gateOverlay").classList.add("open"); return; } openEditor(null); });
   $("#editCancel").addEventListener("click",closeEditor);
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
@@ -654,31 +582,26 @@
   $("#fileBand").addEventListener("change",e=>{ handleFile("band",e.target.files[0]); e.target.value=""; });
   $("#fileCigar").addEventListener("change",e=>{ handleFile("cigar",e.target.files[0]); e.target.value=""; });
 
-  $("#starsInput").querySelectorAll("span").forEach(s=>{
-    s.addEventListener("click",()=>{ const v=+s.dataset.v; setStars(v===currentRating? v-1 : v); });
-  });
+  $("#starsInput").querySelectorAll("span").forEach(s=>s.addEventListener("click",()=>{ const v=+s.dataset.v; setStars(v===currentRating?v-1:v); }));
 
-  const menuPop = $("#menuPop");
+  const menuPop=$("#menuPop");
   $("#menuBtn").addEventListener("click",e=>{ e.stopPropagation(); menuPop.classList.toggle("open"); });
   document.addEventListener("click",()=>menuPop.classList.remove("open"));
   menuPop.addEventListener("click",e=>e.stopPropagation());
-  $("#exportBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); exportData(); });
-  $("#importBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); $("#importInput").click(); });
   $("#installBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); installHelp(); });
   $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
-  $("#importInput").addEventListener("change",e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=""; });
+  $("#logoutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); logout(); });
 
   window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeEditor(); closeDetail(); } });
-  window.addEventListener("pagehide", freeURLs);
+  window.addEventListener("pagehide",freePhotoURLs);
 
   /* ---------------- Boot ---------------- */
   (async function init(){
-    try{ cigars = await dbAll(); }
-    catch(e){ cigars = []; toast("Storage unavailable on this browser"); }
-    try{ currentUser = localStorage.getItem(USER_KEY) || null; }catch(e){ currentUser = null; }
-    updateUserUI();
-    render();
-    if(!currentUser) showGate();
+    setAuthMode("login");
+    if(!sb){ showErr("Couldn't reach the backend service. Refresh to try again."); $("#gateOverlay").classList.add("open"); return; }
+    sb.auth.onAuthStateChange((_e,s)=>onSession(s));
+    const { data } = await sb.auth.getSession();
+    onSession(data.session);
   })();
 })();
 </script>
