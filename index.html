@@ -940,6 +940,8 @@
     $("#shopSearch").value="";
     const ov=$("#shopsOverlay"); ov.classList.add("open"); ov.scrollTop=0;
     await loadShops();
+    // Auto-locate so distances show without an extra tap (silent if blocked)
+    if(!myLoc){ try{ myLoc=await getLocation(); renderShops(); }catch(e){} }
   }
   function closeShops(){ $("#shopsOverlay").classList.remove("open"); }
   async function loadShops(){
@@ -974,7 +976,7 @@
     }
     list.innerHTML=items.map(s=>{
       const addr=[s.address,s.city].filter(Boolean).join(", ");
-      const dist=(myLoc && s._dist!=null && s._dist!==Infinity)?`<span class="sdist">${s._dist<0.1?"you're here":s._dist.toFixed(1)+" mi"}</span>`:"";
+      const dist=(myLoc && s._dist!=null && s._dist!==Infinity)?`<span class="sdist">${s._dist<0.1?"you're here":s._dist.toFixed(1)+" mi away"}</span>`:"";
       const mine=s.created_by===session.user.id;
       return `<div class="shop-card">
         <div class="sname">${esc(s.name)}</div>
