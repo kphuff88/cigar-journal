@@ -649,7 +649,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-4";
+  const APP_VERSION = "2026.11.27-5";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -877,34 +877,51 @@
     }catch(e){ return false; }
   }
 
+  // Has access right now (comped or subscribed)? Bounded by timeouts so a slow
+  // or hung edge function can NEVER freeze the app. Returns true/false, and sets
+  // gateUnsure=true when it couldn't actually determine status.
+  let gateUnsure = false;
+  async function accessOK(){
+    gateUnsure = false;
+    try{ if(await withTimeout(Promise.resolve(isComped()), 7000)) return true; }
+    catch(e){ gateUnsure = true; }
+    try{
+      const sub = await withTimeout(Promise.resolve(isSubscribed()), 9000);
+      if(sub === true) return true;
+      if(sub !== false) gateUnsure = true;   // null = couldn't tell
+    }catch(e){ gateUnsure = true; }
+    return false;
+  }
+
   async function enterApp(s){
     const params = new URLSearchParams(location.search);
     const justPaid = params.has("paid");
-    // Test hook: ?testpaywall=1 forces the paywall for THIS session only
-    // (ignores the free trial) so the owner can preview billing safely.
+    // Test hook: ?testpaywall=1 forces the paywall for THIS session only.
     const forceCheck = params.has("testpaywall");
     const t = trialInfo(s);
     trialDaysLeft = t.daysLeft;
 
-    // Admin-comped users always get in free.
-    if(await isComped()){ subscribed = true; hidePaywall(); $("#trialBar").style.display="none"; await loadCigars(); return; }
+    // In the free trial (normal case) → show the app IMMEDIATELY. Never block the
+    // cigars on a subscription/network check. Then quietly verify in the
+    // background and drop the trial bar if they're actually subscribed/comped.
+    if(t.inTrial && !forceCheck && !justPaid){
+      hidePaywall(); setTrialBar(s); await loadCigars();
+      accessOK().then(ok=>{ if(ok){ subscribed = true; $("#trialBar").style.display="none"; } });
+      return;
+    }
 
-    let sub = await isSubscribed();
-    if(justPaid && sub !== true){
-      // Payment just finished — give Stripe a few seconds to activate it.
+    // Trial over, returning from checkout, or forcing the paywall → gated check.
+    let ok = await accessOK();
+    if(justPaid && !ok){
       showPayConfirming();
-      for(let i=0; i<6 && sub !== true; i++){
-        await new Promise(r=>setTimeout(r, 1600));
-        sub = await isSubscribed();
-      }
+      for(let i=0; i<6 && !ok; i++){ await new Promise(r=>setTimeout(r, 1600)); ok = await accessOK(); }
     }
     if(justPaid){ try{ history.replaceState(null, "", location.pathname); }catch(e){} }
 
-    subscribed = (sub === true);
-    if(subscribed){ hidePaywall(); setTrialBar(s); await loadCigars(); return; }
+    subscribed = ok;
+    if(ok){ hidePaywall(); setTrialBar(s); await loadCigars(); return; }
     if(t.inTrial && !forceCheck){ hidePaywall(); setTrialBar(s); await loadCigars(); return; }
-    // Trial is over (or forced) and no active subscription.
-    showPaywall(sub === false ? "paywall" : "retry");
+    showPaywall(gateUnsure ? "retry" : "paywall");
   }
 
   function setTrialBar(s){
