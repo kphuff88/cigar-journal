@@ -126,6 +126,10 @@
   .field textarea{min-height:110px;resize:vertical;line-height:1.5}
   .row{display:flex;gap:12px}
   .row .field{flex:1}
+  .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .check-grid label.check{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#241610;color:var(--text);font-size:14.5px;font-weight:500;cursor:pointer;line-height:1.2}
+  .check-grid label.check:has(input:checked){border-color:var(--gold-dim);background:#2a1a10;color:var(--gold-soft)}
+  .check-grid input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;accent-color:var(--gold-soft);margin:0}
 
   .stars-input{display:flex;flex-wrap:wrap;gap:6px;font-size:27px;color:#4a3421;user-select:none}
   .dollars-input{display:flex;gap:10px;font-size:30px;color:#4a3421;user-select:none}
@@ -361,10 +365,22 @@
       <div class="field"><label>Origin</label><input id="f_origin" list="originList" placeholder="Type or choose…"><datalist id="originList"><option value="Cameroon"><option value="Cuba"><option value="Dominican"><option value="Ecuador"><option value="Honduras"><option value="Indonesia"><option value="Mexico"><option value="Nicaragua"><option value="US"></datalist></div>
       <div class="field"><label>Wrapper</label><input id="f_wrapper" list="wrapperList" placeholder="Type or choose…"><datalist id="wrapperList"><option value="Connecticut Shade"><option value="Connecticut Broadleaf"><option value="Habano"><option value="Corojo"><option value="Cameroon"><option value="Sumatra"><option value="San Andrés"><option value="Criollo"><option value="Brazilian"><option value="PA Broadleaf"></datalist></div>
     </div>
-    <div class="row">
-      <div class="field"><label>Binder</label><input id="f_binder" placeholder="e.g. Nicaraguan" autocomplete="off"></div>
-      <div class="field"><label>Filler(s)</label><input id="f_filler" placeholder="e.g. Ligero, Viso" autocomplete="off"></div>
+    <div class="field">
+      <label>Binder(s) — tick all that apply</label>
+      <div class="check-grid" id="binderGrid">
+        <label class="check"><input type="checkbox" value="Connecticut Shade">Connecticut Shade</label>
+        <label class="check"><input type="checkbox" value="Connecticut Broadleaf">Connecticut Broadleaf</label>
+        <label class="check"><input type="checkbox" value="Habano">Habano</label>
+        <label class="check"><input type="checkbox" value="Corojo">Corojo</label>
+        <label class="check"><input type="checkbox" value="Cameroon">Cameroon</label>
+        <label class="check"><input type="checkbox" value="Sumatra">Sumatra</label>
+        <label class="check"><input type="checkbox" value="San Andrés">San Andrés</label>
+        <label class="check"><input type="checkbox" value="Criollo">Criollo</label>
+        <label class="check"><input type="checkbox" value="Brazilian">Brazilian</label>
+        <label class="check"><input type="checkbox" value="PA Broadleaf">PA Broadleaf</label>
+      </div>
     </div>
+    <div class="field"><label>Filler(s)</label><input id="f_filler" placeholder="e.g. Ligero, Viso" autocomplete="off"></div>
     <div class="field">
       <label>Favorite</label>
       <button type="button" class="fav-toggle" id="favToggle">♡ Not a favorite</button>
@@ -723,7 +739,8 @@
 
   async function saveCigar(){
     const brand=$("#f_brand").value.trim(), name=$("#f_name").value.trim(), notes=$("#f_notes").value.trim();
-    const origin=$("#f_origin").value.trim(), wrapper=$("#f_wrapper").value.trim(), binder=$("#f_binder").value.trim(), filler=$("#f_filler").value.trim();
+    const origin=$("#f_origin").value.trim(), wrapper=$("#f_wrapper").value.trim(), filler=$("#f_filler").value.trim();
+    const binder=[...document.querySelectorAll("#binderGrid input:checked")].map(c=>c.value).join(", ");
     const size=$("#f_size").value.trim(), length=$("#f_length").value.trim();
     if(!brand && !name && !notes && !photoBand && !photoCigar){ toast("Add a photo or some details first"); return; }
     const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Saving…";
@@ -875,7 +892,8 @@
     $("#f_length").value =c?c.length||"":"";
     $("#f_origin").value =c?c.origin||"":"";
     $("#f_wrapper").value=c?c.wrapper||"":"";
-    $("#f_binder").value =c?c.binder||"":"";
+    const binderSel=(c&&c.binder)?c.binder.split(",").map(s=>s.trim()):[];
+    document.querySelectorAll("#binderGrid input").forEach(cb=>{ cb.checked=binderSel.includes(cb.value); });
     $("#f_filler").value =c?c.filler||"":"";
     $("#f_notes").value=c?c.notes||"":"";
     $("#detailOverlay").classList.remove("open");
