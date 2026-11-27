@@ -748,7 +748,11 @@
   async function checkAccess(s){
     const t = trialInfo(s);
     trialDaysLeft = t.daysLeft;
-    if(t.inTrial) return "allow";
+    // Test hook: add ?testpaywall=1 to the URL to force the subscription
+    // check (ignores the free trial) — lets the owner preview/test billing
+    // without affecting anyone else. Harmless: it can only add a check.
+    const forceCheck = new URLSearchParams(location.search).has("testpaywall");
+    if(t.inTrial && !forceCheck) return "allow";
     try{
       const { data, error } = await sb.functions.invoke("check-subscription", { body:{} });
       if(error) return "retry";
