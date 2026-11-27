@@ -662,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-18";
+  const APP_VERSION = "2026.11.27-19";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1091,12 +1091,14 @@
       if(!refreshed){ refreshed = true; try{ await withTimeout(sb.auth.refreshSession(), 8000); }catch(e){} }
       if(i < 5) await new Promise(r=>setTimeout(r, 400 + i*500));   // ~0.4s … 2.4s
     }
+    try{ console.error("loadCigars failed after retries:", lastErr); }catch(e){}
     if(schemaMissing){
       retryUI(`<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then tap Retry.</p></div>`);
-    }else if(lastErr && lastErr.message && !/timeout/i.test(lastErr.message)){
-      retryUI(`<div class="empty"><div class="big">⚠️</div><p>Couldn't load cigars.</p><p>${esc(lastErr.message)}</p></div>`);
     }else{
-      retryUI(`<div class="empty"><div class="big">📡</div><p><b>Couldn't reach the server.</b></p><p>Check your connection and tap Retry. (Supabase may be having a brief hiccup.)</p></div>`);
+      const diag = lastErr
+        ? [lastErr.name, lastErr.message || String(lastErr), lastErr.status!=null?("status "+lastErr.status):"", lastErr.code?("code "+lastErr.code):"", lastErr.hint||""].filter(Boolean).join(" · ")
+        : "no error details captured";
+      retryUI(`<div class="empty"><div class="big">📡</div><p><b>Couldn't load your cigars.</b></p><p style="font-size:12px;color:var(--faint);word-break:break-word">${esc(diag)}</p></div>`);
     }
   }
 
