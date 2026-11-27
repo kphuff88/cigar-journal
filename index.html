@@ -578,7 +578,7 @@
     <div class="sheet-head">
       <button class="link-btn muted" id="detailClose">‹ Back</button>
       <span style="display:flex;gap:2px">
-        <button class="link-btn" id="detailShare">✉ Email</button>
+        <button class="link-btn" id="detailShare">⤴ Share</button>
         <button class="link-btn" id="detailEdit">Edit</button>
       </span>
     </div>
@@ -665,7 +665,16 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-35";
+  const APP_VERSION = "2026.11.27-36";
+
+  /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
+  const IS_MOBILE = (function(){
+    const ua = navigator.userAgent || "";
+    if(/Android|iPhone|iPod|iPad/i.test(ua)) return true;      // phones & iPads
+    if(/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true; // iPad on iPadOS
+    if(/Mobile/i.test(ua)) return true;
+    return false;
+  })();
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1466,6 +1475,7 @@
   }
   async function shareCigar(){
     const c=cigars.find(x=>x.id===editingId); if(!c) return;
+    if(!IS_MOBILE){ toast("Send not available on a computer — open Cigar Log on your phone to share."); return; }
     const { title, text } = cigarSummary(c);
     let files=[];
     try{
@@ -1570,6 +1580,7 @@
   }
   async function shareShop(id){
     const s=shops.find(x=>x.id===id); if(!s) return;
+    if(!IS_MOBILE){ toast("Send not available on a computer — open Cigar Log on your phone to share."); return; }
     const addr=[s.address,s.city].filter(Boolean).join(", ");
     const url=mapsUrl(s);
     const lines=[s.name];
