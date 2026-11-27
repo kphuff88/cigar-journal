@@ -578,7 +578,10 @@
 <div class="overlay" id="detailOverlay">
   <div class="sheet">
     <div class="sheet-head">
-      <button class="sheet-btn" id="detailClose">‹ Back</button>
+      <span style="display:flex;align-items:center;gap:8px">
+        <button class="sheet-btn" id="detailClose">‹ Back</button>
+        <button class="sheet-btn" id="detailNext">Next ›</button>
+      </span>
       <span style="display:flex;align-items:center;gap:8px">
         <button class="sheet-btn" id="detailShare">⤴ Share</button>
         <button class="sheet-btn" id="detailEdit">✎ Edit</button>
@@ -667,7 +670,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-43";
+  const APP_VERSION = "2026.11.27-44";
 
   /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
   const IS_MOBILE = (function(){
@@ -1467,9 +1470,17 @@
       ${c.notes?`<div class="notes-block"><span class="k">Personal notes</span>${esc(c.notes)}</div>`:`<div class="notes-block" style="color:var(--faint)">No notes yet.</div>`}
       ${d?`<div class="detail-date">Logged ${d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</div>`:""}`;
     const ov=$("#detailOverlay"); ov.classList.add("open"); ov.scrollTop=0;
+    const nb=$("#detailNext"); if(nb) nb.style.display = visibleCigars().length>1 ? "" : "none";
     hydratePhotos($("#detailBody"));
   }
   function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
+  // The cigars in the same order the list currently shows (respects the favorites filter)
+  function visibleCigars(){ return favFilter ? cigars.filter(c=>c.favorite) : cigars.slice(); }
+  function nextCigar(){
+    const items=visibleCigars(); if(items.length<2) return;
+    let i=items.findIndex(c=>c.id===editingId); if(i<0) i=-1;
+    openDetail(items[(i+1)%items.length].id);
+  }
 
   function cigarSummary(c){
     const title=`Cigar: ${[c.brand,c.name].filter(Boolean).join(" ")||"Unnamed cigar"}`;
@@ -1775,6 +1786,7 @@
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
   $("#detailClose").addEventListener("click",closeDetail);
+  $("#detailNext").addEventListener("click",nextCigar);
   $("#detailEdit").addEventListener("click",()=>openEditor(editingId));
   $("#detailShare").addEventListener("click",shareCigar);
   $("#cigarJump").addEventListener("change",e=>{ const id=e.target.value; e.target.value=""; if(id) openDetail(id); });
