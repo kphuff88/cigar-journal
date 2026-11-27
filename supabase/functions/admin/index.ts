@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
 
     if (action === "whoami") return json({ admin: isAdmin });
     if (!isAdmin) return json({ error: "Not authorized." }, 403);
+    if (!SERVICE || !SB_URL) return json({ error: "Server misconfigured: the service role key isn't available to this function." }, 500);
 
     switch (action) {
       case "users":          return json(await listUsers());
@@ -140,13 +141,19 @@ async function listUsers() {
 
 async function setComp(userId: string, comped: boolean, note: string) {
   if (!userId) return { error: "Missing user." };
-  const r = await rest("comps", {
+  const r = await rest("comps?on_conflict=user_id", {
     method: "POST",
     headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
     body: JSON.stringify({ user_id: userId, comped, note, updated_at: new Date().toISOString() }),
   });
-  if (!r.ok) return { error: "Couldn't update free access." };
+  if (!r.ok) return { error: `Free access failed (HTTP ${r.status}): ${detail(r.data)}` };
   return { ok: true, comped };
+}
+
+function detail(d: unknown): string {
+  if (d == null) return "no detail";
+  if (typeof d === "string") return d.slice(0, 200);
+  try { return JSON.stringify(d).slice(0, 200); } catch { return String(d).slice(0, 200); }
 }
 
 async function deleteUser(userId: string, callerId: string) {
@@ -188,6 +195,7 @@ async function removeOption(id: string) {
 /* ---------- shops ---------- */
 async function listShops() {
   const r = await rest("shops?select=id,name,address,city,notes&order=created_at.desc");
+  if (!r.ok) return { shops: [], error: `Shops read failed (HTTP ${r.status}): ${detail(r.data)}` };
   return { shops: Array.isArray(r.data) ? r.data : [] };
 }
 async function deleteShop(id: string) {
