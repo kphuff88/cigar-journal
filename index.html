@@ -821,11 +821,16 @@
     try{
       const returnTo = location.origin + location.pathname;
       const { data, error } = await sb.functions.invoke("create-checkout", { body:{ returnTo } });
-      if(error || !data || !data.url) throw new Error("no url");
+      if(error){
+        let detail="";
+        try{ const b = await error.context.json(); detail = b.detail || b.error || ""; }catch(_){}
+        throw new Error(detail || error.message || "server error");
+      }
+      if(!data || !data.url) throw new Error((data && (data.detail || data.error)) || "no checkout link returned");
       window.location.href = data.url;   // off to Stripe's secure page
     }catch(e){
       btn.disabled=false; btn.textContent=label;
-      const el=$("#payErr"); el.textContent="Couldn't open checkout. Please try again."; el.classList.add("show");
+      const el=$("#payErr"); el.textContent = "Checkout error: " + (e.message || "unknown"); el.classList.add("show");
     }
   }
 
