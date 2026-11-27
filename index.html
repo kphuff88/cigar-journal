@@ -747,14 +747,21 @@
 
   // Asks Stripe (via the edge function) if this user is subscribed.
   // Returns true / false / null (null = couldn't tell, e.g. network).
+  let lastSubError = "";
   async function isSubscribed(){
+    lastSubError = "";
     try{
       const { data, error } = await sb.functions.invoke("check-subscription", { body:{} });
-      if(error) return null;
+      if(error){
+        try{ const b = await error.context.json(); lastSubError = b.detail || b.error || error.message || "request failed"; }
+        catch(_){ lastSubError = error.message || "request failed"; }
+        return null;
+      }
       if(data && data.active === true) return true;
       if(data && data.active === false) return false;
+      lastSubError = (data && (data.detail || data.error)) || "no status returned";
       return null;
-    }catch(e){ return null; }
+    }catch(e){ lastSubError = String((e && e.message) || e); return null; }
   }
 
   async function enterApp(s){
@@ -803,6 +810,7 @@
       : "Subscribe to keep logging your cigars, photos, ratings and notes — everything stays saved in your account.";
     $("#paySubscribe").style.display = retry ? "none" : "block";
     $("#payRetry").style.display = retry ? "block" : "none";
+    if(retry && lastSubError){ const el=$("#payErr"); el.textContent = "Details: " + lastSubError; el.classList.add("show"); }
     $("#payOverlay").classList.add("open");
   }
   function showPayConfirming(){
