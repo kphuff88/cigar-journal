@@ -665,7 +665,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-11";
+  const APP_VERSION = "2026.11.27-12";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -698,7 +698,7 @@
   }
 
   /* ---- State ---- */
-  let session = null, username = "";
+  let session = null, username = "", loadedUserId = null;
   const TRIAL_DAYS = 15;
   let trialDaysLeft = 0;
   let subscribed = false;
@@ -832,8 +832,12 @@
   }
 
   async function onSession(s){
-    session = s;
+    session = s;   // always keep the (possibly refreshed) session current
     if(s){
+      // Already signed in as this same user (e.g. a background token refresh or
+      // returning to the tab) — do NOT rebuild or reload the cigars.
+      if(s.user.id === loadedUserId) return;
+      loadedUserId = s.user.id;
       username = (s.user.user_metadata && s.user.user_metadata.username) || (s.user.email||"").split("@")[0];
       $("#userLine").textContent = "@"+username;
       $("#menuUser").innerHTML = `Signed in as <b>${esc(username)}</b>`;
@@ -842,7 +846,7 @@
       checkAdmin();
       await enterApp(s);
     }else{
-      username=""; cigars=[]; freePhotoURLs();
+      username=""; loadedUserId=null; cigars=[]; freePhotoURLs();
       isAdminUser=false; { const ab=$("#adminBtn"); if(ab) ab.style.display="none"; } $("#adminOverlay").classList.remove("open");
       favFilter=false; const fb=$("#favFilterBtn"); if(fb) fb.classList.remove("on");
       $("#userLine").textContent = "Your pocket humidor";
