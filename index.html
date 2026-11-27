@@ -66,8 +66,6 @@
   .scan-btn:active{filter:brightness(.95)}
   .scan-btn:disabled{opacity:.65;cursor:default}
 
-  .stats-bar{font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;padding:9px 12px;margin:2px 0 12px;text-align:center}
-  .stats-bar b{color:var(--gold);font-weight:600}
   .main-controls{display:flex;gap:10px;align-items:stretch;margin:0 0 14px}
   .main-controls .cigar-jump{flex:1;margin:0}
   .fav-chip{flex:0 0 auto;background:#241610;border:1px solid var(--line);color:var(--faint);border-radius:12px;padding:0 15px;font-size:18px;cursor:pointer}
@@ -341,7 +339,6 @@
     </div>
     <div class="ib-detail" id="installBarDetail"></div>
   </div>
-  <div id="statsBar" class="stats-bar" style="display:none"></div>
   <div class="main-controls">
     <select id="cigarJump" class="cigar-jump"><option value="">Jump to a cigar…</option></select>
     <button id="favFilterBtn" class="fav-chip" title="Show favorites only" aria-label="Show favorites only">♥</button>
@@ -665,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-12";
+  const APP_VERSION = "2026.11.27-13";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1177,21 +1174,8 @@
       return `<option value="${esc(c.id)}">${esc(label)}</option>`;
     }).join("");
   }
-  function renderStats(){
-    const bar=$("#statsBar");
-    if(!cigars.length){ bar.style.display="none"; return; }
-    const rated=cigars.filter(c=>c.rating>0);
-    const avg=rated.length?(rated.reduce((s,c)=>s+c.rating,0)/rated.length):0;
-    let top=null; cigars.forEach(c=>{ if(c.rating>0 && (!top||c.rating>top.rating)) top=c; });
-    const parts=[`<b>${cigars.length}</b> cigar${cigars.length!==1?"s":""}`];
-    if(avg) parts.push(`avg <b>${avg.toFixed(1)}</b>/10`);
-    if(top){ const tn=[top.brand,top.name].filter(Boolean).join(" ")||"—"; parts.push(`top: <b>${esc(tn)}</b>`); }
-    bar.innerHTML=parts.join("&nbsp; · &nbsp;");
-    bar.style.display="";
-  }
   function render(){
     populateJump();
-    renderStats();
     let items=cigars.slice();
     if(favFilter) items=items.filter(c=>c.favorite);
     $("#countPill").textContent=cigars.length;
