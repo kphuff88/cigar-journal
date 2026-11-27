@@ -3,7 +3,7 @@
 Plain-English notebook for the Cigar Log app. You don't need to be technical to use
 this — it's just so you always know what things are and where to find them.
 
-_Last updated: 2026-11-25_
+_Last updated: 2026-11-27_
 
 ---
 
@@ -66,9 +66,14 @@ _Last updated: 2026-11-25_
 > and removed — the text recognition wasn't reliable enough on real cigar bands.
 7. **Cigar Shops directory (shared):** any signed-in user can add a shop (name, address,
    notes, location), and a **"Near me"** search lists shops by distance with map
-   directions. Opened with the **📍** button in the top bar. Ratings are now **1–10
+   directions. Opened with the **map-marker** button in the top bar. Ratings are now **1–10
    stars**, color-coded (red 1–3, orange 4–5, yellow 6–8, green 9–10).
    _Setup: run **supabase-shops.sql** in Supabase once (see to-do)._
+8. **Scan band (AI auto-fill):** photograph a band and tap **✨ Scan band to fill Brand
+   & Name** — the app reads the band with Google's AI and fills Brand, Name, and (when
+   printed) Size/Origin/Wrapper. The Google key is kept secret on the server via a
+   Supabase "middleman" so it's never exposed in the public app. Everyone who uses the
+   app shares this one free setup. _(Live since 2026-11-27.)_
 
 ---
 
@@ -89,9 +94,10 @@ from any device.
 - [ ] **Re-run `supabase-setup.sql`** (or the short ALTER snippet) to add the new cigar
       columns: `profile`, `origin`, `wrapper`, `binder`, `filler`. Until then the app
       still saves, but those new fields won't be stored.
-- [ ] **Turn on "Scan band" (AI auto-fill)** — follow `SCAN_SETUP.md`: get a free
-      Google AI key, deploy the `scan-band` Edge Function in Supabase, and add the
-      `GEMINI_API_KEY` secret. Until then the ✨ Scan button shows "Scan unavailable".
+- [x] **Scan band (AI auto-fill) is LIVE** — free Google AI key + `scan-band` Edge
+      Function + `GEMINI_API_KEY` secret are all set up and working (tested 2026-11-27).
+      Photograph a band → tap ✨ Scan → Brand & Name fill in automatically. Friends
+      share this one setup; they need nothing extra.
 
 ---
 
