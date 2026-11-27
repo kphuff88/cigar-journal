@@ -598,6 +598,7 @@
   let session = null, username = "";
   const TRIAL_DAYS = 15;
   let trialDaysLeft = 0;
+  let subscribed = false;
   let cigars = [];
   let editingId = null;
   let photoBand = null, photoCigar = null;   // {blob} new uploads, or {path} existing, or null
@@ -744,52 +745,52 @@
     return { inTrial: daysUsed < TRIAL_DAYS, daysLeft: Math.max(0, Math.ceil(TRIAL_DAYS - daysUsed)) };
   }
 
-  // Returns 'allow' | 'paywall' | 'retry'
-  async function checkAccess(s){
-    const t = trialInfo(s);
-    trialDaysLeft = t.daysLeft;
-    // Test hook: add ?testpaywall=1 to the URL to force the subscription
-    // check (ignores the free trial) — lets the owner preview/test billing
-    // without affecting anyone else. Harmless: it can only add a check.
-    const forceCheck = new URLSearchParams(location.search).has("testpaywall");
-    if(t.inTrial && !forceCheck) return "allow";
+  // Asks Stripe (via the edge function) if this user is subscribed.
+  // Returns true / false / null (null = couldn't tell, e.g. network).
+  async function isSubscribed(){
     try{
       const { data, error } = await sb.functions.invoke("check-subscription", { body:{} });
-      if(error) return "retry";
-      if(data && data.active === true) return "allow";
-      if(data && data.active === false) return "paywall";
-      return "retry";
-    }catch(e){ return "retry"; }
+      if(error) return null;
+      if(data && data.active === true) return true;
+      if(data && data.active === false) return false;
+      return null;
+    }catch(e){ return null; }
   }
 
   async function enterApp(s){
-    const justPaid = new URLSearchParams(location.search).has("paid");
-    if(justPaid){
-      // Clean the URL and give Stripe a moment to activate the subscription.
-      try{ history.replaceState(null, "", location.pathname); }catch(e){}
+    const params = new URLSearchParams(location.search);
+    const justPaid = params.has("paid");
+    // Test hook: ?testpaywall=1 forces the paywall for THIS session only
+    // (ignores the free trial) so the owner can preview billing safely.
+    const forceCheck = params.has("testpaywall");
+    const t = trialInfo(s);
+    trialDaysLeft = t.daysLeft;
+
+    let sub = await isSubscribed();
+    if(justPaid && sub !== true){
+      // Payment just finished — give Stripe a few seconds to activate it.
       showPayConfirming();
-      for(let i=0;i<6;i++){
-        const v = await checkAccess(s);
-        if(v === "allow"){ hidePaywall(); updateTrialBar(s); await loadCigars(); return; }
+      for(let i=0; i<6 && sub !== true; i++){
         await new Promise(r=>setTimeout(r, 1600));
+        sub = await isSubscribed();
       }
-      // Still not active — fall through to a normal check below.
     }
-    const verdict = await checkAccess(s);
-    if(verdict === "allow"){ hidePaywall(); updateTrialBar(s); await loadCigars(); }
-    else { showPaywall(verdict); }
+    if(justPaid){ try{ history.replaceState(null, "", location.pathname); }catch(e){} }
+
+    subscribed = (sub === true);
+    if(subscribed){ hidePaywall(); setTrialBar(s); await loadCigars(); return; }
+    if(t.inTrial && !forceCheck){ hidePaywall(); setTrialBar(s); await loadCigars(); return; }
+    // Trial is over (or forced) and no active subscription.
+    showPaywall(sub === false ? "paywall" : "retry");
   }
 
-  function updateTrialBar(s){
+  function setTrialBar(s){
     const bar = $("#trialBar");
     const t = trialInfo(s);
-    if(t.inTrial){
-      const d = t.daysLeft;
-      $("#trialBarText").innerHTML = `Free trial: <b>${d} day${d===1?"":"s"}</b> left`;
-      bar.style.display = "flex";
-    }else{
-      bar.style.display = "none"; // subscribed — no banner
-    }
+    if(subscribed || !t.inTrial){ bar.style.display = "none"; return; }
+    const d = t.daysLeft;
+    $("#trialBarText").innerHTML = `Free trial: <b>${d} day${d===1?"":"s"}</b> left`;
+    bar.style.display = "flex";
   }
 
   function showPaywall(verdict){
