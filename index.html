@@ -644,7 +644,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -662,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-20";
+  const APP_VERSION = "2026.11.27-21";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -691,11 +691,7 @@
 
   let sb = null;
   if(window.supabase && window.supabase.createClient){
-    // No-op lock: bypass supabase-js's navigator.locks auth lock, which can
-    // deadlock and make the first request hang forever (then a manual Retry
-    // works). Running the fn directly avoids the stuck lock.
-    const noLock = async (_name, _acquireTimeout, fn) => await fn();
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true, storage:authStorage, lock:noLock}});
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true, storage:authStorage}});
   }
 
   /* ---- State ---- */
@@ -1079,7 +1075,7 @@
     $("#list").innerHTML = `<div class="loading"><div class="spinner"></div>Loading your cigars…</div>`;
     // The first request on load can lose a race with the sign-in finishing, so
     // retry a few times quietly before ever showing an error.
-    let lastErr = null, schemaMissing = false, refreshed = false;
+    let lastErr = null, schemaMissing = false;
     for(let i=0; i<6; i++){
       try{
         const { data, error } = await withTimeout(sb.from("cigars").select("*").order("updated_at",{ascending:false}), 9000);
@@ -1090,9 +1086,6 @@
           cigars = data||[]; render(); return;   // success
         }
       }catch(e){ lastErr = e; }
-      // On the first failure, force a token refresh — the saved login token is
-      // often stale on load, and that's what makes the first request fail.
-      if(!refreshed){ refreshed = true; try{ await withTimeout(sb.auth.refreshSession(), 8000); }catch(e){} }
       if(i < 5) await new Promise(r=>setTimeout(r, 400 + i*500));   // ~0.4s … 2.4s
     }
     try{ console.error("loadCigars failed after retries:", lastErr); }catch(e){}
