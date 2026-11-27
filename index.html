@@ -198,6 +198,35 @@
   .menu-ver{font-size:11px;color:var(--faint);opacity:.75;padding:8px 12px 4px;text-align:center}
   .menu-user b{color:var(--gold);font-weight:700}
 
+  .admin-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .admin-stats .stat{flex:1 1 40%;background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;text-align:center}
+  .admin-stats .stat b{display:block;font-size:21px;color:var(--gold-soft)}
+  .admin-stats .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .admin-sec{margin-bottom:26px}
+  .admin-sec h3{margin:0 0 4px;font-size:16px;color:var(--gold)}
+  .admin-hint{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.4}
+  .admin-optgroup{margin-bottom:16px}
+  .admin-optgroup .cap{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:7px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#241610;border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 13px;font-size:13.5px;color:var(--text)}
+  .chip button{background:none;border:none;color:var(--muted);font-size:17px;line-height:1;cursor:pointer;padding:0 3px}
+  .chip button:active{color:var(--danger)}
+  .add-opt{display:flex;gap:8px}
+  .add-opt input{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:#fff;color:#2b1a10;font-size:15px}
+  .add-opt button{flex:0 0 auto;background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border:none;border-radius:10px;padding:0 18px;font-weight:700;cursor:pointer}
+  .admin-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+  .admin-row .who{flex:1;min-width:0}
+  .admin-row .who .em{font-size:14px;color:var(--text);word-break:break-all}
+  .admin-row .who .me{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-top:3px;flex-wrap:wrap}
+  .admin-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:999px;white-space:nowrap;border:1px solid var(--line)}
+  .admin-badge.on{color:#7bd88f;border-color:#3c6b45}
+  .admin-badge.warn{color:var(--muted)}
+  .admin-row .acts{display:flex;gap:6px;flex:0 0 auto}
+  .admin-row .acts button{font-size:12px;font-weight:600;border-radius:8px;padding:8px 9px;cursor:pointer;border:1px solid var(--line);background:#241610;color:var(--muted);white-space:nowrap}
+  .admin-row .acts button.danger{border-color:var(--danger);color:var(--danger)}
+  .admin-row .acts button.gold{border-color:var(--gold-dim);color:var(--gold-soft)}
+  .admin-empty{font-size:13px;color:var(--faint);padding:10px 0}
+
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-bottom));z-index:80;background:#140d07;border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:88%;text-align:center;box-shadow:0 6px 20px #0008}
   .toast.show{opacity:1}
   input[type=file]{display:none}
@@ -285,6 +314,7 @@
     <button class="icon-btn" id="menuBtn" aria-label="Menu">⋮</button>
     <div class="menu-pop" id="menuPop">
       <div class="menu-user" id="menuUser"></div>
+      <button id="adminBtn" style="display:none">🛠️ Admin</button>
       <button id="exportBtn">⬇️ Export my log (CSV)</button>
       <button id="installBtn">📲 Add to Home Screen</button>
       <button id="aboutBtn">ℹ️ About this app</button>
@@ -374,6 +404,37 @@
   </div>
 </div>
 
+<!-- Admin screen (owner only) -->
+<div class="overlay" id="adminOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="link-btn muted" id="adminClose">Close</button>
+      <h2>Admin</h2>
+      <span style="width:56px"></span>
+    </div>
+
+    <div class="admin-stats" id="adminStats">Loading…</div>
+
+    <div class="admin-sec">
+      <h3>Dropdown lists</h3>
+      <p class="admin-hint">Add or remove the choices people see in Origin, Wrapper and Binder. Changes apply to everyone.</p>
+      <div id="adminOptions"></div>
+    </div>
+
+    <div class="admin-sec">
+      <h3>People</h3>
+      <p class="admin-hint">Give free access, or remove an account.</p>
+      <div id="adminUsers">Loading…</div>
+    </div>
+
+    <div class="admin-sec">
+      <h3>Cigar shops</h3>
+      <p class="admin-hint">Remove spam or bad entries from the shared directory.</p>
+      <div id="adminShops">Loading…</div>
+    </div>
+  </div>
+</div>
+
 <!-- Editor -->
 <div class="overlay" id="editorOverlay">
   <div class="sheet">
@@ -414,7 +475,7 @@
         <div class="combo" data-combo>
           <input id="f_origin" placeholder="Type or choose…" autocomplete="off">
           <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
-          <div class="combo-list" hidden>
+          <div class="combo-list" id="originOpts" hidden>
             <button type="button" data-val="Cameroon">Cameroon</button>
             <button type="button" data-val="Cuba">Cuba</button>
             <button type="button" data-val="Dominican">Dominican</button>
@@ -431,7 +492,7 @@
         <div class="combo" data-combo>
           <input id="f_wrapper" placeholder="Type or choose…" autocomplete="off">
           <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
-          <div class="combo-list" hidden>
+          <div class="combo-list" id="wrapperOpts" hidden>
             <button type="button" data-val="Connecticut Shade">Connecticut Shade</button>
             <button type="button" data-val="Connecticut Broadleaf">Connecticut Broadleaf</button>
             <button type="button" data-val="Habano">Habano</button>
@@ -590,7 +651,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-1";
+  const APP_VERSION = "2026.11.27-2";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -764,9 +825,11 @@
       $("#menuUser").innerHTML = `Signed in as <b>${esc(username)}</b>`;
       $("#gateOverlay").classList.remove("open");
       $("#authPass").value="";
+      checkAdmin();
       await enterApp(s);
     }else{
       username=""; cigars=[]; freePhotoURLs();
+      isAdminUser=false; { const ab=$("#adminBtn"); if(ab) ab.style.display="none"; } $("#adminOverlay").classList.remove("open");
       favFilter=false; const fb=$("#favFilterBtn"); if(fb) fb.classList.remove("on");
       $("#userLine").textContent = "Your pocket humidor";
       $("#menuUser").innerHTML = "";
@@ -808,6 +871,14 @@
     }catch(e){ lastSubError = String((e && e.message) || e); return null; }
   }
 
+  // Admin-granted free access (reads the user's own comp row).
+  async function isComped(){
+    try{
+      const { data } = await sb.from("comps").select("comped").eq("user_id", session.user.id).maybeSingle();
+      return !!(data && data.comped);
+    }catch(e){ return false; }
+  }
+
   async function enterApp(s){
     const params = new URLSearchParams(location.search);
     const justPaid = params.has("paid");
@@ -816,6 +887,9 @@
     const forceCheck = params.has("testpaywall");
     const t = trialInfo(s);
     trialDaysLeft = t.daysLeft;
+
+    // Admin-comped users always get in free.
+    if(await isComped()){ subscribed = true; hidePaywall(); $("#trialBar").style.display="none"; await loadCigars(); return; }
 
     let sub = await isSubscribed();
     if(justPaid && sub !== true){
@@ -1149,18 +1223,43 @@
       const input=combo.querySelector("input");
       const list=combo.querySelector(".combo-list");
       const caret=combo.querySelector(".combo-caret");
-      const btns=[...list.querySelectorAll("button")];
+      // Buttons are read live so the list can be rebuilt (admin edits) any time.
+      const btns=()=>[...list.querySelectorAll("button")];
       const filter=()=>{ const q=input.value.trim().toLowerCase(); let any=false;
-        btns.forEach(b=>{ const show=!q||b.dataset.val.toLowerCase().includes(q); b.style.display=show?"":"none"; if(show)any=true; });
+        btns().forEach(b=>{ const show=!q||(b.dataset.val||"").toLowerCase().includes(q); b.style.display=show?"":"none"; if(show)any=true; });
         return any; };
-      const showAll=()=>{ btns.forEach(b=>b.style.display=""); list.hidden=false; };
+      const showAll=()=>{ btns().forEach(b=>b.style.display=""); list.hidden=false; };
       const close=()=>{ list.hidden=true; };
       caret.addEventListener("click",e=>{ e.preventDefault(); if(list.hidden) showAll(); else close(); });
       input.addEventListener("focus",()=>{ list.hidden=!filter(); });
       input.addEventListener("input",()=>{ list.hidden=!filter(); });
-      btns.forEach(b=>b.addEventListener("pointerdown",e=>{ e.preventDefault(); input.value=b.dataset.val; close(); }));
+      list.addEventListener("pointerdown",e=>{ const b=e.target.closest("button"); if(!b) return; e.preventDefault(); input.value=b.dataset.val; close(); });
       document.addEventListener("pointerdown",e=>{ if(!combo.contains(e.target)) close(); });
     });
+  }
+
+  /* ---- Dropdown option lists (defaults; admin can edit these in the DB) ---- */
+  const DEFAULT_OPTIONS = {
+    origin:["Cameroon","Cuba","Dominican","Ecuador","Honduras","Indonesia","Mexico","Nicaragua","US"],
+    wrapper:["Connecticut Shade","Connecticut Broadleaf","Habano","Corojo","Cameroon","Sumatra","San Andrés","Criollo","Brazilian","PA Broadleaf"],
+    binder:["Connecticut Shade","Connecticut Broadleaf","Habano","Corojo","Cameroon","Sumatra","San Andrés","Criollo","Brazilian","PA Broadleaf"],
+  };
+  function applyOptions(o){
+    o = o || {};
+    const optBtns = arr => (arr||[]).map(v=>`<button type="button" data-val="${esc(v)}">${esc(v)}</button>`).join("");
+    const checks  = arr => (arr||[]).map(v=>`<label class="check"><input type="checkbox" value="${esc(v)}">${esc(v)}</label>`).join("");
+    if(o.origin && o.origin.length)  $("#originOpts").innerHTML  = optBtns(o.origin);
+    if(o.wrapper && o.wrapper.length) $("#wrapperOpts").innerHTML = optBtns(o.wrapper);
+    if(o.binder && o.binder.length)  $("#binderGrid").innerHTML  = checks(o.binder);
+  }
+  async function loadOptions(){
+    try{
+      const { data, error } = await sb.from("app_options").select("category,value,sort_order").order("sort_order");
+      if(error || !data || !data.length) return;
+      const o={origin:[],wrapper:[],binder:[]};
+      data.forEach(r=>{ if(o[r.category]) o[r.category].push(r.value); });
+      applyOptions(o);
+    }catch(e){}
   }
 
   async function paintSlot(slotId,label,photo,which){
@@ -1646,6 +1745,9 @@
   window.addEventListener("appinstalled",()=>{ const b=$("#installBar"); if(b) b.style.display="none"; deferredInstall=null; toast("Added to your home screen ✓"); });
   $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
   $("#logoutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); logout(); });
+  $("#adminBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); openAdmin(); });
+  $("#adminClose").addEventListener("click",closeAdmin);
+  $("#adminOverlay").addEventListener("click",onAdminClick);
   $("#subBtn").addEventListener("click",startCheckout);
   $("#trialBarGo").addEventListener("click",startCheckout);
   $("#payRetryBtn").addEventListener("click",()=>{ if(session) enterApp(session); });
@@ -1653,6 +1755,87 @@
 
   window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeShopForm(); closeShops(); closeEditor(); closeDetail(); } });
   window.addEventListener("pagehide",freePhotoURLs);
+
+  /* ---------------- Admin ---------------- */
+  let isAdminUser = false;
+  async function adminCall(action, extra){
+    const { data, error } = await sb.functions.invoke("admin", { body:{ action, ...(extra||{}) } });
+    if(error){ let d=""; try{ const b=await error.context.json(); d=b.error||b.detail||""; }catch(_){ } throw new Error(d || error.message || "failed"); }
+    if(data && data.error) throw new Error(data.error);
+    return data;
+  }
+  async function checkAdmin(){
+    try{ const d = await adminCall("whoami"); isAdminUser = !!(d && d.admin); }catch(e){ isAdminUser=false; }
+    const b=$("#adminBtn"); if(b) b.style.display = isAdminUser ? "block" : "none";
+  }
+  function openAdmin(){ const ov=$("#adminOverlay"); ov.classList.add("open"); ov.scrollTop=0; loadAdmin(); }
+  function closeAdmin(){ $("#adminOverlay").classList.remove("open"); }
+  function loadAdmin(){ renderAdminOptions(); loadAdminUsers(); loadAdminShops(); }
+
+  async function renderAdminOptions(){
+    const box=$("#adminOptions"); box.innerHTML="Loading…";
+    try{
+      const d = await adminCall("options-get");
+      const o=(d&&d.options)||{};
+      const groups=[["origin","Origin"],["wrapper","Wrapper"],["binder","Binder"]];
+      box.innerHTML = groups.map(([cat,label])=>{
+        const items=o[cat]||[];
+        const chips = items.map(it=>`<span class="chip">${esc(it.value)}<button data-rm="${esc(it.id)}" aria-label="Remove">×</button></span>`).join("") || `<span class="admin-empty">None yet</span>`;
+        return `<div class="admin-optgroup"><div class="cap">${label}</div>
+          <div class="chips">${chips}</div>
+          <div class="add-opt"><input placeholder="Add ${label.toLowerCase()}…" data-addin="${cat}"><button data-add="${cat}">Add</button></div></div>`;
+      }).join("");
+    }catch(e){ box.innerHTML=`<div class="admin-empty">Couldn't load lists: ${esc(e.message)}</div>`; }
+  }
+  async function loadAdminUsers(){
+    const box=$("#adminUsers"); box.innerHTML="Loading…";
+    try{
+      const d = await adminCall("users");
+      const totals=d.totals||{}, users=d.users||[];
+      $("#adminStats").innerHTML =
+        `<div class="stat"><b>${totals.users||0}</b><span>Users</span></div>`+
+        `<div class="stat"><b>${totals.subscribers||0}</b><span>Subscribers</span></div>`+
+        `<div class="stat"><b>${totals.comped||0}</b><span>Free</span></div>`+
+        `<div class="stat"><b>${totals.cigars||0}</b><span>Cigars</span></div>`;
+      box.innerHTML = users.map(u=>{
+        const badge = u.comped ? `<span class="admin-badge on">Free</span>`
+          : (u.subscribed ? `<span class="admin-badge on">Subscribed</span>`
+          : `<span class="admin-badge warn">${esc(u.status)}</span>`);
+        return `<div class="admin-row"><div class="who">
+            <div class="em">${esc(u.email)}</div>
+            <div class="me">${badge}<span>${u.cigars} cigars</span><span>joined ${esc(u.joined)}</span></div>
+          </div><div class="acts">
+            <button class="gold" data-comp="${esc(u.user_id)}" data-on="${u.comped?"1":"0"}">${u.comped?"Remove free":"Make free"}</button>
+            <button class="danger" data-del="${esc(u.user_id)}" data-em="${esc(u.email)}">Delete</button>
+          </div></div>`;
+      }).join("") || `<div class="admin-empty">No users.</div>`;
+    }catch(e){ box.innerHTML=`<div class="admin-empty">Couldn't load users: ${esc(e.message)}</div>`; $("#adminStats").textContent=""; }
+  }
+  async function loadAdminShops(){
+    const box=$("#adminShops"); box.innerHTML="Loading…";
+    try{
+      const d = await adminCall("shops-list");
+      const shops=d.shops||[];
+      box.innerHTML = shops.map(s=>`<div class="admin-row"><div class="who">
+          <div class="em">${esc(s.name||"(unnamed)")}</div>
+          <div class="me"><span>${esc([s.address,s.city].filter(Boolean).join(", "))||"—"}</span></div>
+        </div><div class="acts"><button class="danger" data-delshop="${esc(s.id)}">Delete</button></div></div>`).join("") || `<div class="admin-empty">No shops yet.</div>`;
+    }catch(e){ box.innerHTML=`<div class="admin-empty">Couldn't load shops: ${esc(e.message)}</div>`; }
+  }
+  async function onAdminClick(e){
+    const t=e.target; if(!t || !t.getAttribute) return;
+    const addCat=t.getAttribute("data-add");
+    if(addCat){ const inp=$(`[data-addin="${addCat}"]`); const v=inp?inp.value.trim():""; if(!v){ if(inp) inp.focus(); return; }
+      t.disabled=true; try{ await adminCall("options-add",{category:addCat,value:v}); if(inp) inp.value=""; await renderAdminOptions(); loadOptions(); }catch(err){ toast(err.message); } t.disabled=false; return; }
+    const rm=t.getAttribute("data-rm");
+    if(rm){ try{ await adminCall("options-remove",{id:rm}); await renderAdminOptions(); loadOptions(); }catch(err){ toast(err.message); } return; }
+    const comp=t.getAttribute("data-comp");
+    if(comp){ const on=t.getAttribute("data-on")==="1"; t.disabled=true; try{ await adminCall("comp",{user_id:comp,comped:!on}); await loadAdminUsers(); }catch(err){ toast(err.message); t.disabled=false; } return; }
+    const del=t.getAttribute("data-del");
+    if(del){ const em=t.getAttribute("data-em")||"this account"; if(!confirm("Delete "+em+" ?\n\nThis permanently removes the account and all of its cigars. This cannot be undone.")) return; t.disabled=true; try{ await adminCall("delete-user",{user_id:del}); toast("Account deleted"); await loadAdminUsers(); }catch(err){ toast(err.message); t.disabled=false; } return; }
+    const ds=t.getAttribute("data-delshop");
+    if(ds){ if(!confirm("Delete this shop from the shared directory?")) return; t.disabled=true; try{ await adminCall("shop-delete",{id:ds}); toast("Shop deleted"); await loadAdminShops(); }catch(err){ toast(err.message); t.disabled=false; } return; }
+  }
 
   /* ---------------- Boot ---------------- */
   setTimeout(hideSplash, 3500); // safety net
@@ -1679,6 +1862,7 @@
     if(isiOS) maybeShowInstallBar("ios");
     const mv=$("#menuVer"); if(mv) mv.textContent = "Version " + APP_VERSION;
     startUpdateWatch();
+    loadOptions();
     hideSplash();
   })();
 
