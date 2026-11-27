@@ -119,7 +119,9 @@
   .sheet-head h2{margin:0;font-size:18px}
   .link-btn{background:none;border:none;color:var(--gold);font-size:16px;font-weight:600;cursor:pointer;padding:6px}
   .link-btn.muted{color:var(--muted)}
-  .sheet-btn{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border:none;border-radius:10px;height:34px;padding:0 14px;font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+  .sheet-btn{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border:none;border-radius:10px;height:34px;padding:0 11px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+  .sheet-btn.sheet-icon{padding:0 10px}
+  .sh-group{display:flex;align-items:center;gap:7px}
 
   .photo-row{display:flex;gap:12px;margin-bottom:18px}
   .photo-slot{flex:1;aspect-ratio:1/1;border-radius:var(--radius);background:#190e07;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;overflow:hidden;position:relative}
@@ -578,11 +580,12 @@
 <div class="overlay" id="detailOverlay">
   <div class="sheet">
     <div class="sheet-head">
-      <span style="display:flex;align-items:center;gap:8px">
-        <button class="sheet-btn" id="detailClose">‹ Back</button>
+      <span class="sh-group">
+        <button class="sheet-btn" id="detailPrev">‹ Prev</button>
         <button class="sheet-btn" id="detailNext">Next ›</button>
       </span>
-      <span style="display:flex;align-items:center;gap:8px">
+      <button class="sheet-btn sheet-icon" id="detailHome" aria-label="Home (back to list)" title="Home"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/><path d="M10 19v-5h4v5"/></svg></button>
+      <span class="sh-group">
         <button class="sheet-btn" id="detailShare">⤴ Share</button>
         <button class="sheet-btn" id="detailEdit">✎ Edit</button>
       </span>
@@ -670,7 +673,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-44";
+  const APP_VERSION = "2026.11.27-45";
 
   /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
   const IS_MOBILE = (function(){
@@ -1470,7 +1473,10 @@
       ${c.notes?`<div class="notes-block"><span class="k">Personal notes</span>${esc(c.notes)}</div>`:`<div class="notes-block" style="color:var(--faint)">No notes yet.</div>`}
       ${d?`<div class="detail-date">Logged ${d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}</div>`:""}`;
     const ov=$("#detailOverlay"); ov.classList.add("open"); ov.scrollTop=0;
-    const nb=$("#detailNext"); if(nb) nb.style.display = visibleCigars().length>1 ? "" : "none";
+    const multi = visibleCigars().length>1;
+    const pb=$("#detailPrev"), nb=$("#detailNext");
+    if(pb) pb.style.display = multi ? "" : "none";
+    if(nb) nb.style.display = multi ? "" : "none";
     hydratePhotos($("#detailBody"));
   }
   function closeDetail(){ $("#detailOverlay").classList.remove("open"); }
@@ -1480,6 +1486,11 @@
     const items=visibleCigars(); if(items.length<2) return;
     let i=items.findIndex(c=>c.id===editingId); if(i<0) i=-1;
     openDetail(items[(i+1)%items.length].id);
+  }
+  function prevCigar(){
+    const items=visibleCigars(); if(items.length<2) return;
+    let i=items.findIndex(c=>c.id===editingId); if(i<0) i=0;
+    openDetail(items[(i-1+items.length)%items.length].id);
   }
 
   function cigarSummary(c){
@@ -1785,7 +1796,8 @@
   $("#scanBtn").addEventListener("click",scanBand);
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
-  $("#detailClose").addEventListener("click",closeDetail);
+  $("#detailHome").addEventListener("click",closeDetail);
+  $("#detailPrev").addEventListener("click",prevCigar);
   $("#detailNext").addEventListener("click",nextCigar);
   $("#detailEdit").addEventListener("click",()=>openEditor(editingId));
   $("#detailShare").addEventListener("click",shareCigar);
