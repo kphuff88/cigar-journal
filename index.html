@@ -637,21 +637,15 @@
   "use strict";
   const $ = s => document.querySelector(s);
 
-  /* ---- Auto-update: register the service worker ---- */
+  /* ---- Register the service worker (for offline + fresh content on open) ---- */
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./sw.js").catch(() => {});
     });
-    let swReloaded = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (swReloaded) return;
-      swReloaded = true;
-      location.reload();
-    });
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-2";
+  const APP_VERSION = "2026.11.27-3";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1866,33 +1860,10 @@
     hideSplash();
   })();
 
-  /* ---- Auto-update watch: reload when a newer release is live ---- */
-  let pendingVersion = "";
-  function anyOverlayOpen(){
-    return !!document.querySelector(".overlay.open, .cropper.open");
-  }
-  function applyUpdateIfSafe(){
-    if(!pendingVersion || anyOverlayOpen()) return;
-    try{
-      if(sessionStorage.getItem("cigar_reloaded_for") === pendingVersion) return; // avoid any loop
-      sessionStorage.setItem("cigar_reloaded_for", pendingVersion);
-    }catch(e){}
-    location.reload();
-  }
-  async function checkForUpdate(){
-    try{
-      const r = await fetch("version.txt?cb=" + Date.now(), { cache:"no-store" });
-      if(!r.ok) return;
-      const v = (await r.text()).trim();
-      if(v && v !== APP_VERSION){ pendingVersion = v; applyUpdateIfSafe(); }
-    }catch(e){}
-  }
-  function startUpdateWatch(){
-    setTimeout(checkForUpdate, 6000);
-    setInterval(checkForUpdate, 10*60*1000);
-    document.addEventListener("visibilitychange", ()=>{
-      if(document.visibilityState === "visible"){ applyUpdateIfSafe(); checkForUpdate(); }
-    });
-  }
+  /* ---- Update handling ----
+     The service worker is network-first for the page, so each time the app is
+     opened (or reopened) online it already loads the newest version. We do NOT
+     force an in-session reload — that risked a refresh loop on some caches. ---- */
+  function startUpdateWatch(){ /* auto-reload disabled; updates arrive on next open */ }
 })();
 </script>
