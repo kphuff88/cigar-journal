@@ -666,7 +666,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-39";
+  const APP_VERSION = "2026.11.27-40";
 
   /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
   const IS_MOBILE = (function(){
@@ -772,7 +772,16 @@
   function emailFor(u){ return u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,"") + "@" + EMAIL_DOMAIN; }
 
   let toastT;
-  function toast(msg, atTop){ const t=$("#toast"); t.textContent=msg; t.classList.toggle("at-top", !!atTop); t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400); }
+  function toast(msg, atTop){
+    const t=$("#toast"); t.textContent=msg; t.classList.toggle("at-top", !!atTop);
+    if(atTop){
+      // Center the message vertically over the band & cigar photos, if visible
+      const ph=document.querySelector("#detailBody .detail-photos");
+      if(ph){ const r=ph.getBoundingClientRect(); t.style.top=Math.round(r.top + r.height/2 - t.offsetHeight/2)+"px"; }
+      else { t.style.top=""; }
+    } else { t.style.top=""; }
+    t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400);
+  }
 
   /* ---------------- Auth ---------------- */
   function setAuthMode(mode){
