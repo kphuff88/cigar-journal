@@ -662,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-15";
+  const APP_VERSION = "2026.11.27-16";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1075,8 +1075,8 @@
     $("#list").innerHTML = `<div class="loading"><div class="spinner"></div>Loading your cigars…</div>`;
     // The first request on load can lose a race with the sign-in finishing, so
     // retry a few times quietly before ever showing an error.
-    let lastErr = null, schemaMissing = false;
-    for(let i=0; i<4; i++){
+    let lastErr = null, schemaMissing = false, refreshed = false;
+    for(let i=0; i<6; i++){
       try{
         const { data, error } = await withTimeout(sb.from("cigars").select("*").order("updated_at",{ascending:false}), 9000);
         if(error){
@@ -1086,7 +1086,10 @@
           cigars = data||[]; render(); return;   // success
         }
       }catch(e){ lastErr = e; }
-      if(i < 3) await new Promise(r=>setTimeout(r, 500 + i*700));   // 0.5s, 1.2s, 1.9s
+      // On the first failure, force a token refresh — the saved login token is
+      // often stale on load, and that's what makes the first request fail.
+      if(!refreshed){ refreshed = true; try{ await withTimeout(sb.auth.refreshSession(), 8000); }catch(e){} }
+      if(i < 5) await new Promise(r=>setTimeout(r, 400 + i*500));   // ~0.4s … 2.4s
     }
     if(schemaMissing){
       retryUI(`<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then tap Retry.</p></div>`);
