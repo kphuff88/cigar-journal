@@ -53,6 +53,12 @@
   .install-bar #installBarGo{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border-radius:8px;padding:8px 14px}
   .install-bar .ib-detail{font-size:12.5px;color:var(--muted);line-height:1.5}
   .install-bar .ib-detail b{color:var(--gold-soft);font-weight:600}
+  .trial-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#2a1a10;border:1px solid var(--gold-dim);border-radius:12px;padding:11px 13px;margin:2px 0 14px;font-size:13.5px;color:var(--gold-soft);line-height:1.35}
+  .trial-bar #trialBarText{font-weight:600}
+  .trial-bar #trialBarText b{color:var(--gold-soft);font-weight:800}
+  .trial-bar #trialBarGo{flex:0 0 auto;background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13.5px;cursor:pointer}
+  .pay-price{font-size:17px;color:var(--gold-soft);margin-bottom:14px;font-weight:600}
+  .pay-price b{font-size:26px;font-weight:800;color:var(--gold)}
   .install-bar .ib-detail ol{margin:4px 0 0;padding-left:20px}
   .install-bar .ib-detail li{margin:3px 0}
 
@@ -286,6 +292,10 @@
 </header>
 
 <main>
+  <div class="trial-bar" id="trialBar" style="display:none">
+    <span id="trialBarText"></span>
+    <button id="trialBarGo">Subscribe</button>
+  </div>
   <div class="install-bar" id="installBar" style="display:none">
     <div class="ib-top">
       <span id="installBarText">📲 Add Cigar Log to your home screen</span>
@@ -331,6 +341,30 @@
 
     <button class="go" id="authGo">Log in</button>
     <p class="fine" id="gateFine">Your email and password are stored securely by your Supabase backend. Photos and ratings are saved to your private cloud space.</p>
+  </div>
+</div>
+
+<!-- Subscription paywall (shown after the free trial ends) -->
+<div class="overlay gate" id="payOverlay">
+  <div class="gate-card">
+    <img class="gate-mark" src="icon-192.png" alt="Cigar Log">
+    <h2 id="payHead">Your free trial has ended</h2>
+    <p class="sub" id="paySub">Subscribe to keep logging your cigars, photos, ratings and notes — everything stays saved in your account.</p>
+
+    <div class="err" id="payErr"></div>
+
+    <div id="paySubscribe">
+      <div class="pay-price"><b>$4.99</b> / year</div>
+      <button class="go" id="subBtn">Subscribe — $4.99/year</button>
+      <p class="fine">You'll finish on Stripe's secure checkout page. Cancel anytime from the link in your email receipt.</p>
+    </div>
+
+    <div id="payRetry" style="display:none">
+      <button class="go" id="payRetryBtn">Retry</button>
+      <p class="fine">We couldn't check your subscription just now — usually a connection hiccup.</p>
+    </div>
+
+    <p class="fine"><a href="#" id="paySignOut" style="color:var(--gold)">Sign out</a></p>
   </div>
 </div>
 
@@ -562,6 +596,8 @@
 
   /* ---- State ---- */
   let session = null, username = "";
+  const TRIAL_DAYS = 15;
+  let trialDaysLeft = 0;
   let cigars = [];
   let editingId = null;
   let photoBand = null, photoCigar = null;   // {blob} new uploads, or {path} existing, or null
@@ -683,7 +719,7 @@
       $("#menuUser").innerHTML = `Signed in as <b>${esc(username)}</b>`;
       $("#gateOverlay").classList.remove("open");
       $("#authPass").value="";
-      await loadCigars();
+      await enterApp(s);
     }else{
       username=""; cigars=[]; freePhotoURLs();
       favFilter=false; const fb=$("#favFilterBtn"); if(fb) fb.classList.remove("on");
@@ -692,10 +728,100 @@
       $("#list").innerHTML="";
       $("#editorOverlay").classList.remove("open");
       $("#detailOverlay").classList.remove("open");
+      $("#payOverlay").classList.remove("open");
+      $("#trialBar").style.display="none";
       $("#countPill").textContent="0";
       $("#authUser").value=""; $("#authPass").value="";
       setAuthMode("login");
       $("#gateOverlay").classList.add("open");
+    }
+  }
+
+  /* ---------------- Subscription / trial gate ---------------- */
+  function trialInfo(s){
+    const created = new Date(s.user.created_at).getTime();
+    const daysUsed = (Date.now() - created) / 86400000;
+    return { inTrial: daysUsed < TRIAL_DAYS, daysLeft: Math.max(0, Math.ceil(TRIAL_DAYS - daysUsed)) };
+  }
+
+  // Returns 'allow' | 'paywall' | 'retry'
+  async function checkAccess(s){
+    const t = trialInfo(s);
+    trialDaysLeft = t.daysLeft;
+    if(t.inTrial) return "allow";
+    try{
+      const { data, error } = await sb.functions.invoke("check-subscription", { body:{} });
+      if(error) return "retry";
+      if(data && data.active === true) return "allow";
+      if(data && data.active === false) return "paywall";
+      return "retry";
+    }catch(e){ return "retry"; }
+  }
+
+  async function enterApp(s){
+    const justPaid = new URLSearchParams(location.search).has("paid");
+    if(justPaid){
+      // Clean the URL and give Stripe a moment to activate the subscription.
+      try{ history.replaceState(null, "", location.pathname); }catch(e){}
+      showPayConfirming();
+      for(let i=0;i<6;i++){
+        const v = await checkAccess(s);
+        if(v === "allow"){ hidePaywall(); updateTrialBar(s); await loadCigars(); return; }
+        await new Promise(r=>setTimeout(r, 1600));
+      }
+      // Still not active — fall through to a normal check below.
+    }
+    const verdict = await checkAccess(s);
+    if(verdict === "allow"){ hidePaywall(); updateTrialBar(s); await loadCigars(); }
+    else { showPaywall(verdict); }
+  }
+
+  function updateTrialBar(s){
+    const bar = $("#trialBar");
+    const t = trialInfo(s);
+    if(t.inTrial){
+      const d = t.daysLeft;
+      $("#trialBarText").innerHTML = `Free trial: <b>${d} day${d===1?"":"s"}</b> left`;
+      bar.style.display = "flex";
+    }else{
+      bar.style.display = "none"; // subscribed — no banner
+    }
+  }
+
+  function showPaywall(verdict){
+    $("#list").innerHTML=""; $("#trialBar").style.display="none";
+    $("#payErr").classList.remove("show");
+    const retry = verdict === "retry";
+    $("#payHead").textContent = retry ? "Just a moment…" : "Your free trial has ended";
+    $("#paySub").textContent = retry
+      ? "We couldn't confirm your subscription. Check your connection and try again."
+      : "Subscribe to keep logging your cigars, photos, ratings and notes — everything stays saved in your account.";
+    $("#paySubscribe").style.display = retry ? "none" : "block";
+    $("#payRetry").style.display = retry ? "block" : "none";
+    $("#payOverlay").classList.add("open");
+  }
+  function showPayConfirming(){
+    $("#payErr").classList.remove("show");
+    $("#payHead").textContent = "Confirming your subscription…";
+    $("#paySub").textContent = "This takes just a few seconds after payment.";
+    $("#paySubscribe").style.display = "none";
+    $("#payRetry").style.display = "none";
+    $("#payOverlay").classList.add("open");
+  }
+  function hidePaywall(){ $("#payOverlay").classList.remove("open"); }
+
+  async function startCheckout(){
+    const btn=$("#subBtn"); const label=btn.textContent;
+    btn.disabled=true; btn.textContent="Opening secure checkout…";
+    $("#payErr").classList.remove("show");
+    try{
+      const returnTo = location.origin + location.pathname;
+      const { data, error } = await sb.functions.invoke("create-checkout", { body:{ returnTo } });
+      if(error || !data || !data.url) throw new Error("no url");
+      window.location.href = data.url;   // off to Stripe's secure page
+    }catch(e){
+      btn.disabled=false; btn.textContent=label;
+      const el=$("#payErr"); el.textContent="Couldn't open checkout. Please try again."; el.classList.add("show");
     }
   }
 
@@ -1458,6 +1584,10 @@
   window.addEventListener("appinstalled",()=>{ const b=$("#installBar"); if(b) b.style.display="none"; deferredInstall=null; toast("Added to your home screen ✓"); });
   $("#aboutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); about(); });
   $("#logoutBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); logout(); });
+  $("#subBtn").addEventListener("click",startCheckout);
+  $("#trialBarGo").addEventListener("click",startCheckout);
+  $("#payRetryBtn").addEventListener("click",()=>{ if(session) enterApp(session); });
+  $("#paySignOut").addEventListener("click",(e)=>{ e.preventDefault(); logout(); });
 
   window.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCropper(); closeShopForm(); closeShops(); closeEditor(); closeDetail(); } });
   window.addEventListener("pagehide",freePhotoURLs);
