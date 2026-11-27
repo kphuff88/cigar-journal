@@ -536,6 +536,19 @@
   "use strict";
   const $ = s => document.querySelector(s);
 
+  /* ---- Auto-update: register the service worker ---- */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+    let swReloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (swReloaded) return;
+      swReloaded = true;
+      location.reload();
+    });
+  }
+
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
   const SUPABASE_KEY = "sb_publishable_GilyxsrHXHekyrrzkjlNYw_-3Nq6Idf";
