@@ -662,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-19";
+  const APP_VERSION = "2026.11.27-20";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -691,7 +691,11 @@
 
   let sb = null;
   if(window.supabase && window.supabase.createClient){
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true, storage:authStorage}});
+    // No-op lock: bypass supabase-js's navigator.locks auth lock, which can
+    // deadlock and make the first request hang forever (then a manual Retry
+    // works). Running the fn directly avoids the stuck lock.
+    const noLock = async (_name, _acquireTimeout, fn) => await fn();
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true, storage:authStorage, lock:noLock}});
   }
 
   /* ---- State ---- */
