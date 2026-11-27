@@ -232,6 +232,7 @@
 
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-bottom));z-index:80;background:#140d07;border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:88%;text-align:center;box-shadow:0 6px 20px #0008}
   .toast.show{opacity:1}
+  .toast.at-top{bottom:auto;top:calc(60px + var(--safe-top))}
   input[type=file]{display:none}
 
   /* Auth gate */
@@ -665,7 +666,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-38";
+  const APP_VERSION = "2026.11.27-39";
 
   /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
   const IS_MOBILE = (function(){
@@ -771,7 +772,7 @@
   function emailFor(u){ return u.trim().toLowerCase().replace(/[^a-z0-9._-]/g,"") + "@" + EMAIL_DOMAIN; }
 
   let toastT;
-  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400); }
+  function toast(msg, atTop){ const t=$("#toast"); t.textContent=msg; t.classList.toggle("at-top", !!atTop); t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400); }
 
   /* ---------------- Auth ---------------- */
   function setAuthMode(mode){
@@ -1475,7 +1476,7 @@
   }
   async function shareCigar(){
     const c=cigars.find(x=>x.id===editingId); if(!c) return;
-    if(!IS_MOBILE){ toast("Send not available on a computer — open Cigar Log on your phone to share."); return; }
+    if(!IS_MOBILE){ toast("Send not available on a computer — open Cigar Log on your phone to share.", true); return; }
     const { title, text } = cigarSummary(c);
     let files=[];
     try{
@@ -1580,7 +1581,7 @@
   }
   async function shareShop(id){
     const s=shops.find(x=>x.id===id); if(!s) return;
-    if(!IS_MOBILE){ toast("Send not available on a computer — open Cigar Log on your phone to share."); return; }
+    if(!IS_MOBILE){ toast("Send not available on a computer — open Cigar Log on your phone to share.", true); return; }
     const addr=[s.address,s.city].filter(Boolean).join(", ");
     const url=mapsUrl(s);
     const lines=[s.name];
