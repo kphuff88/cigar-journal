@@ -1624,6 +1624,18 @@
   (async function init(){
     setAuthMode("login");
     if(!sb){ showErr("Couldn't reach the backend service. Refresh to try again."); $("#gateOverlay").classList.add("open"); hideSplash(); return; }
+    // Self-logout escape hatch: open the app with ?logout=1 to force a
+    // clean sign-out (useful if the menu Log out ever gets stuck).
+    if(new URLSearchParams(location.search).has("logout")){
+      try{ await sb.auth.signOut({ scope:"local" }); }catch(e){}
+      try{
+        for(let i=localStorage.length-1; i>=0; i--){
+          const k=localStorage.key(i);
+          if(k && /^sb-.*-auth-token/.test(k)) localStorage.removeItem(k);
+        }
+      }catch(e){}
+      try{ history.replaceState(null, "", location.pathname); }catch(e){}
+    }
     sb.auth.onAuthStateChange((_e,s)=>onSession(s));
     try{ const { data } = await sb.auth.getSession(); onSession(data.session); }catch(e){ onSession(null); }
     if(isiOS) maybeShowInstallBar("ios");
