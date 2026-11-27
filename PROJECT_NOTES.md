@@ -74,6 +74,13 @@ _Last updated: 2026-11-27_
    printed) Size/Origin/Wrapper. The Google key is kept secret on the server via a
    Supabase "middleman" so it's never exposed in the public app. Everyone who uses the
    app shares this one free setup. _(Live since 2026-11-27.)_
+9. **Editor polish (phone-first):** one field per row, white field backgrounds with
+   dark-brown text, Band/Length fields, type-or-pick dropdowns for Origin & Wrapper,
+   and a multi-select checkbox list for Binders.
+10. **Auto-update (service worker):** the app now refreshes itself. Each time it's
+    opened online it loads the newest version automatically — no more re-adding to the
+    home screen after an update. Works offline too (shows the last saved copy).
+    _(File: `sw.js`. Added 2026-11-27.)_
 
 ---
 
