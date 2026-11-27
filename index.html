@@ -173,7 +173,7 @@
   .save-btn{width:100%;padding:16px;border:none;border-radius:13px;font-size:17px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer;margin-top:10px}
   .save-btn:disabled{opacity:.6}
   .save-btn:active{filter:brightness(.95)}
-  .delete-btn{width:100%;padding:14px;border:1px solid var(--danger);border-radius:13px;font-size:15px;font-weight:600;background:transparent;color:var(--danger);cursor:pointer;margin-top:14px}
+  .delete-btn{width:100%;padding:16px;border:none;border-radius:13px;font-size:16px;font-weight:700;background:var(--danger);color:#fff;cursor:pointer;margin-top:14px}
 
   .detail-photos{display:flex;gap:12px;margin-bottom:18px}
   .detail-photos figure{flex:1;margin:0}
@@ -459,6 +459,11 @@
 
     <button type="button" class="scan-btn" id="scanBtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M12 3l1.6 3.9L17.5 8l-3.9 1.6L12 13l-1.6-3.4L6.5 8l3.9-1.1z"/><path d="M18 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Scan band to fill Brand &amp; Name</button>
 
+    <div class="field">
+      <label>Favorite</label>
+      <button type="button" class="fav-toggle" id="favToggle">🙂 Not a favorite</button>
+    </div>
+
     <div class="row">
       <div class="field"><label>Brand</label><input id="f_brand" placeholder="e.g. Padrón" autocomplete="off"></div>
       <div class="field"><label>Name</label><input id="f_name" placeholder="e.g. 1964 Anniversary" autocomplete="off"></div>
@@ -536,11 +541,6 @@
         <label class="check"><input type="checkbox" value="Pennsylvania">Pennsylvania</label>
       </div>
     </div>
-    <div class="field">
-      <label>Favorite</label>
-      <button type="button" class="fav-toggle" id="favToggle">♡ Not a favorite</button>
-    </div>
-
     <div class="field">
       <label>Your rating</label>
       <div class="stars-input" id="starsInput">
@@ -662,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-21";
+  const APP_VERSION = "2026.11.27-22";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -745,7 +745,7 @@
     currentPrice=n;
     $("#dollarsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n));
   }
-  function setFav(b){ currentFav=!!b; const t=$("#favToggle"); t.classList.toggle("on",currentFav); t.textContent=currentFav?"♥ Favorite":"♡ Not a favorite"; }
+  function setFav(b){ currentFav=!!b; const t=$("#favToggle"); t.classList.toggle("on",currentFav); t.textContent=currentFav?"🙂 Favorite":"🙂 Not a favorite"; }
   function fmtDate(d){ if(!d) return ""; const x=new Date(d+"T00:00"); return isNaN(x)?d:x.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}); }
   function specHTML(c){
     const specs=[["Band",c.size],["Length",c.length],["Origin",c.origin],["Wrapper",c.wrapper],["Binder",c.binder],["Filler",c.filler],["In humidor",c.quantity?String(c.quantity):""]].filter(s=>s[1]);
