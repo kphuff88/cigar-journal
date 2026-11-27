@@ -126,6 +126,13 @@
   .field textarea{min-height:110px;resize:vertical;line-height:1.5}
   .row{display:flex;gap:12px}
   .row .field{flex:1}
+  .combo{position:relative}
+  .combo input{padding-right:40px}
+  .combo-caret{position:absolute;top:0;right:0;height:100%;width:40px;border:none;background:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .combo-list{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:40;background:#241610;border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 28px #000a;max-height:232px;overflow:auto;padding:5px;-webkit-overflow-scrolling:touch}
+  .combo-list[hidden]{display:none}
+  .combo-list button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:12px;font-size:15px;border-radius:8px;cursor:pointer}
+  .combo-list button:hover,.combo-list button:focus{background:#2a1a10;color:var(--gold-soft);outline:none}
   .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .check-grid label.check{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#241610;color:var(--text);font-size:14.5px;font-weight:500;cursor:pointer;line-height:1.2}
   .check-grid label.check:has(input:checked){border-color:var(--gold-dim);background:#2a1a10;color:var(--gold-soft)}
@@ -362,8 +369,41 @@
       <div class="field"><label>Length</label><input id="f_length" placeholder="e.g. 6 in" autocomplete="off"></div>
     </div>
     <div class="row">
-      <div class="field"><label>Origin</label><input id="f_origin" list="originList" placeholder="Type or choose…"><datalist id="originList"><option value="Cameroon"><option value="Cuba"><option value="Dominican"><option value="Ecuador"><option value="Honduras"><option value="Indonesia"><option value="Mexico"><option value="Nicaragua"><option value="US"></datalist></div>
-      <div class="field"><label>Wrapper</label><input id="f_wrapper" list="wrapperList" placeholder="Type or choose…"><datalist id="wrapperList"><option value="Connecticut Shade"><option value="Connecticut Broadleaf"><option value="Habano"><option value="Corojo"><option value="Cameroon"><option value="Sumatra"><option value="San Andrés"><option value="Criollo"><option value="Brazilian"><option value="PA Broadleaf"></datalist></div>
+      <div class="field"><label>Origin</label>
+        <div class="combo" data-combo>
+          <input id="f_origin" placeholder="Type or choose…" autocomplete="off">
+          <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
+          <div class="combo-list" hidden>
+            <button type="button" data-val="Cameroon">Cameroon</button>
+            <button type="button" data-val="Cuba">Cuba</button>
+            <button type="button" data-val="Dominican">Dominican</button>
+            <button type="button" data-val="Ecuador">Ecuador</button>
+            <button type="button" data-val="Honduras">Honduras</button>
+            <button type="button" data-val="Indonesia">Indonesia</button>
+            <button type="button" data-val="Mexico">Mexico</button>
+            <button type="button" data-val="Nicaragua">Nicaragua</button>
+            <button type="button" data-val="US">US</button>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label>Wrapper</label>
+        <div class="combo" data-combo>
+          <input id="f_wrapper" placeholder="Type or choose…" autocomplete="off">
+          <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
+          <div class="combo-list" hidden>
+            <button type="button" data-val="Connecticut Shade">Connecticut Shade</button>
+            <button type="button" data-val="Connecticut Broadleaf">Connecticut Broadleaf</button>
+            <button type="button" data-val="Habano">Habano</button>
+            <button type="button" data-val="Corojo">Corojo</button>
+            <button type="button" data-val="Cameroon">Cameroon</button>
+            <button type="button" data-val="Sumatra">Sumatra</button>
+            <button type="button" data-val="San Andrés">San Andrés</button>
+            <button type="button" data-val="Criollo">Criollo</button>
+            <button type="button" data-val="Brazilian">Brazilian</button>
+            <button type="button" data-val="PA Broadleaf">PA Broadleaf</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="field">
       <label>Binder(s) — tick all that apply</label>
@@ -901,6 +941,26 @@
   }
   function closeEditor(){ $("#editorOverlay").classList.remove("open"); editingId=null; }
 
+  /* Type-or-pick dropdown (works where <datalist> fails on iOS Safari) */
+  function initCombos(){
+    document.querySelectorAll("[data-combo]").forEach(combo=>{
+      const input=combo.querySelector("input");
+      const list=combo.querySelector(".combo-list");
+      const caret=combo.querySelector(".combo-caret");
+      const btns=[...list.querySelectorAll("button")];
+      const filter=()=>{ const q=input.value.trim().toLowerCase(); let any=false;
+        btns.forEach(b=>{ const show=!q||b.dataset.val.toLowerCase().includes(q); b.style.display=show?"":"none"; if(show)any=true; });
+        return any; };
+      const showAll=()=>{ btns.forEach(b=>b.style.display=""); list.hidden=false; };
+      const close=()=>{ list.hidden=true; };
+      caret.addEventListener("click",e=>{ e.preventDefault(); if(list.hidden) showAll(); else close(); });
+      input.addEventListener("focus",()=>{ list.hidden=!filter(); });
+      input.addEventListener("input",()=>{ list.hidden=!filter(); });
+      btns.forEach(b=>b.addEventListener("pointerdown",e=>{ e.preventDefault(); input.value=b.dataset.val; close(); }));
+      document.addEventListener("pointerdown",e=>{ if(!combo.contains(e.target)) close(); });
+    });
+  }
+
   async function paintSlot(slotId,label,photo,which){
     const slot=$("#"+slotId);
     let src="";
@@ -1327,6 +1387,7 @@
   $("#nearMeBtn").addEventListener("click",nearMe);
   $("#shopSearch").addEventListener("input",renderShops);
   $("#editCancel").addEventListener("click",closeEditor);
+  initCombos();
   $("#scanBtn").addEventListener("click",scanBand);
   $("#saveBtn").addEventListener("click",saveCigar);
   $("#deleteBtn").addEventListener("click",deleteCigar);
