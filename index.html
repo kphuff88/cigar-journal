@@ -68,11 +68,12 @@
 
   .main-controls{display:flex;gap:10px;align-items:stretch;margin:0 0 14px}
   .main-controls .cigar-jump{flex:1;margin:0}
-  .fav-chip{flex:0 0 auto;background:#241610;border:2px solid var(--gold-dim);color:var(--faint);border-radius:12px;padding:0 15px;font-size:24px;cursor:pointer}
+  .fav-chip{flex:0 0 auto;background:#241610;border:2px solid var(--gold-dim);color:var(--gold-soft);border-radius:12px;padding:0 15px;font-size:24px;cursor:pointer;display:flex;align-items:center}
   .fav-chip.on{color:#e05a5a;border-color:#e05a5a}
+  .smiley{width:1.05em;height:1.05em;display:inline-block;vertical-align:-0.18em}
   .fav-toggle{width:100%;padding:13px;border-radius:11px;border:1px solid var(--line);background:#241610;color:var(--muted);font-size:15px;font-weight:600;cursor:pointer;text-align:left}
   .fav-toggle.on{color:#e86a6a;border-color:#e86a6a}
-  .card .fav-dot{color:#e05a5a;font-size:13px}
+  .card .fav-dot{color:#c0922f;font-size:18px}
   .qty-badge{font-size:12px;color:var(--muted);background:#ffffff10;border:1px solid var(--line-soft);border-radius:999px;padding:2px 9px}
 
   .cigar-jump{width:100%;padding:12px 40px 12px 14px;border-radius:12px;border:2px solid var(--gold-dim);background:#241610;color:var(--text);font-size:15px;margin:0 0 14px;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b6a28b' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
@@ -342,7 +343,7 @@
   </div>
   <div class="main-controls">
     <select id="cigarJump" class="cigar-jump"><option value="">Jump to a cigar…</option></select>
-    <button id="favFilterBtn" class="fav-chip" title="Show favorites only" aria-label="Show favorites only">🙂</button>
+    <button id="favFilterBtn" class="fav-chip" title="Show favorites only" aria-label="Show favorites only"><svg class="smiley" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.3c.9 1.2 2.1 1.9 3.5 1.9s2.6-.7 3.5-1.9"/><circle cx="9" cy="10" r="1.05" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.05" fill="currentColor" stroke="none"/></svg></button>
   </div>
   <div class="grid" id="list"></div>
 </main>
@@ -663,7 +664,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-24";
+  const APP_VERSION = "2026.11.27-25";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -716,6 +717,7 @@
   }
 
   const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const SMILEY = '<svg class="smiley" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.3c.9 1.2 2.1 1.9 3.5 1.9s2.6-.7 3.5-1.9"/><circle cx="9" cy="10" r="1.05" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.05" fill="currentColor" stroke="none"/></svg>';
   function ratingColor(n){ n=+n||0; if(n<=0) return null; if(n<=3) return "#d8463a"; if(n<=5) return "#e08a2e"; if(n<=8) return "#e3c23c"; return "#5faa4e"; }
   function stars(n){ n=+n||0; const col=ratingColor(n); let h=""; for(let i=1;i<=10;i++){ h += i<=n ? `<span style="color:${col}">★</span>` : `<span class="off">★</span>`; } return h; }
 
@@ -746,7 +748,7 @@
     currentPrice=n;
     $("#dollarsInput").querySelectorAll("span").forEach(s=>s.classList.toggle("on",(+s.dataset.v)<=n));
   }
-  function setFav(b){ currentFav=!!b; const t=$("#favToggle"); t.classList.toggle("on",currentFav); t.textContent=currentFav?"🙂 Favorite":"🙂 Not a favorite"; }
+  function setFav(b){ currentFav=!!b; const t=$("#favToggle"); t.classList.toggle("on",currentFav); t.innerHTML=SMILEY+(currentFav?" Favorite":" Not a favorite"); }
   function fmtDate(d){ if(!d) return ""; const x=new Date(d+"T00:00"); return isNaN(x)?d:x.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}); }
   function specHTML(c){
     const specs=[["Band",c.size],["Length",c.length],["Origin",c.origin],["Wrapper",c.wrapper],["Binder",c.binder],["Filler",c.filler],["In humidor",c.quantity?String(c.quantity):""]].filter(s=>s[1]);
@@ -1192,7 +1194,7 @@
     const list=$("#list");
     if(!items.length){
       list.innerHTML = favFilter
-        ? `<div class="empty"><div class="big">🙂</div><p>No favorites yet — open a cigar and mark it a favorite.</p></div>`
+        ? `<div class="empty"><div class="big" style="color:var(--gold-dim)">${SMILEY}</div><p>No favorites yet — open a cigar and mark it a favorite.</p></div>`
         : `<div class="empty"><div class="big">🚬</div><p><b>No cigars logged yet.</b></p><p>Tap <b>Add Cigar</b> to snap the band and the cigar, rate it, and jot your notes.</p></div>`;
       return;
     }
@@ -1204,7 +1206,7 @@
       if(c.price) bits.push(`<span class="dollars">${dollars(c.price)}</span>`);
       if(c.quantity) bits.push(`<span class="qty-badge">×${c.quantity}</span>`);
       const meta = bits.length?`<div class="card-meta">${bits.join("")}</div>`:"";
-      const fav = c.favorite?' <span class="fav-dot">🙂</span>':'';
+      const fav = c.favorite?' <span class="fav-dot">'+SMILEY+'</span>':'';
       return `<div class="card" data-id="${esc(c.id)}">${thumb}
         <div class="info">
           <div class="brand">${esc(c.brand)||"&nbsp;"}</div>
@@ -1436,7 +1438,7 @@
     $("#detailBody").innerHTML=`
       <div class="detail-photos">${frame(c.band_path,"Band")}${frame(c.cigar_path,"Cigar")}</div>
       <div class="detail-brand">${esc(c.brand)||""}</div>
-      <div class="detail-name">${esc(c.name)||"Unnamed cigar"}${c.favorite?' <span style="font-size:20px">🙂</span>':''}</div>
+      <div class="detail-name">${esc(c.name)||"Unnamed cigar"}${c.favorite?' <span style="font-size:22px;color:var(--gold-soft)">'+SMILEY+'</span>':''}</div>
       <div class="detail-stars">${c.rating?stars(c.rating):'<span style="font-size:14px;color:var(--faint);letter-spacing:0">Not rated</span>'}</div>
       ${c.price?`<div class="detail-dollars dollars">${dollars(c.price)}</div>`:""}
       ${c.profile?`<div class="profile-detail"><div class="profile-cap">Profile · ${PROFILE_LABELS[c.profile-1]}</div><div class="profile-strip">${profileStripHTML(c.profile,false)}</div></div>`:""}
