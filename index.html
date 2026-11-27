@@ -508,35 +508,35 @@
         </div>
       </div>
     </div>
-    <div class="field">
-      <label>Binder(s) — tick all that apply</label>
-      <div class="check-grid" id="binderGrid">
-        <label class="check"><input type="checkbox" value="Connecticut Shade">Connecticut Shade</label>
-        <label class="check"><input type="checkbox" value="Connecticut Broadleaf">Connecticut Broadleaf</label>
-        <label class="check"><input type="checkbox" value="Habano">Habano</label>
-        <label class="check"><input type="checkbox" value="Corojo">Corojo</label>
-        <label class="check"><input type="checkbox" value="Cameroon">Cameroon</label>
-        <label class="check"><input type="checkbox" value="Sumatra">Sumatra</label>
-        <label class="check"><input type="checkbox" value="San Andrés">San Andrés</label>
-        <label class="check"><input type="checkbox" value="Criollo">Criollo</label>
-        <label class="check"><input type="checkbox" value="Brazilian">Brazilian</label>
-        <label class="check"><input type="checkbox" value="PA Broadleaf">PA Broadleaf</label>
+    <div class="field"><label>Binder</label>
+      <div class="combo" data-combo>
+        <input id="f_binder" placeholder="Type or choose…" autocomplete="off">
+        <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
+        <div class="combo-list" id="binderOpts" hidden>
+          <button type="button" data-val="Connecticut Shade">Connecticut Shade</button>
+          <button type="button" data-val="Connecticut Broadleaf">Connecticut Broadleaf</button>
+          <button type="button" data-val="Habano">Habano</button>
+          <button type="button" data-val="Corojo">Corojo</button>
+          <button type="button" data-val="Cameroon">Cameroon</button>
+          <button type="button" data-val="Sumatra">Sumatra</button>
+          <button type="button" data-val="San Andrés">San Andrés</button>
+          <button type="button" data-val="Criollo">Criollo</button>
+          <button type="button" data-val="Brazilian">Brazilian</button>
+          <button type="button" data-val="PA Broadleaf">PA Broadleaf</button>
+        </div>
       </div>
     </div>
-    <div class="field"><label>Filler(s)</label>
-      <div class="combo" data-combo>
-        <input id="f_filler" placeholder="Type or choose…" autocomplete="off">
-        <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
-        <div class="combo-list" id="fillerOpts" hidden>
-          <button type="button" data-val="Ligero">Ligero</button>
-          <button type="button" data-val="Seco">Seco</button>
-          <button type="button" data-val="Viso">Viso</button>
-          <button type="button" data-val="Nicaragua">Nicaragua</button>
-          <button type="button" data-val="Dominican">Dominican</button>
-          <button type="button" data-val="Honduras">Honduras</button>
-          <button type="button" data-val="Mexican">Mexican</button>
-          <button type="button" data-val="Pennsylvania">Pennsylvania</button>
-        </div>
+    <div class="field">
+      <label>Filler(s) — tick all that apply</label>
+      <div class="check-grid" id="fillerGrid">
+        <label class="check"><input type="checkbox" value="Ligero">Ligero</label>
+        <label class="check"><input type="checkbox" value="Seco">Seco</label>
+        <label class="check"><input type="checkbox" value="Viso">Viso</label>
+        <label class="check"><input type="checkbox" value="Nicaragua">Nicaragua</label>
+        <label class="check"><input type="checkbox" value="Dominican">Dominican</label>
+        <label class="check"><input type="checkbox" value="Honduras">Honduras</label>
+        <label class="check"><input type="checkbox" value="Mexican">Mexican</label>
+        <label class="check"><input type="checkbox" value="Pennsylvania">Pennsylvania</label>
       </div>
     </div>
     <div class="field">
@@ -665,7 +665,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-9";
+  const APP_VERSION = "2026.11.27-10";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1091,8 +1091,8 @@
 
   async function saveCigar(){
     const brand=$("#f_brand").value.trim(), name=$("#f_name").value.trim(), notes=$("#f_notes").value.trim();
-    const origin=$("#f_origin").value.trim(), wrapper=$("#f_wrapper").value.trim(), filler=$("#f_filler").value.trim();
-    const binder=[...document.querySelectorAll("#binderGrid input:checked")].map(c=>c.value).join(", ");
+    const origin=$("#f_origin").value.trim(), wrapper=$("#f_wrapper").value.trim(), binder=$("#f_binder").value.trim();
+    const filler=[...document.querySelectorAll("#fillerGrid input:checked")].map(c=>c.value).join(", ");
     const size=$("#f_size").value.trim(), length=$("#f_length").value.trim();
     if(!brand && !name && !notes && !photoBand && !photoCigar){ toast("Add a photo or some details first"); return; }
     const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Saving…";
@@ -1244,9 +1244,9 @@
     $("#f_length").value =c?c.length||"":"";
     $("#f_origin").value =c?c.origin||"":"";
     $("#f_wrapper").value=c?c.wrapper||"":"";
-    const binderSel=(c&&c.binder)?c.binder.split(",").map(s=>s.trim()):[];
-    document.querySelectorAll("#binderGrid input").forEach(cb=>{ cb.checked=binderSel.includes(cb.value); });
-    $("#f_filler").value =c?c.filler||"":"";
+    $("#f_binder").value =c?c.binder||"":"";
+    const fillerSel=(c&&c.filler)?c.filler.split(",").map(s=>s.trim()):[];
+    document.querySelectorAll("#fillerGrid input").forEach(cb=>{ cb.checked=fillerSel.includes(cb.value); });
     $("#f_notes").value=c?c.notes||"":"";
     $("#detailOverlay").classList.remove("open");
     const ov=$("#editorOverlay"); ov.classList.add("open"); ov.scrollTop=0;
@@ -1287,8 +1287,8 @@
     const checks  = arr => (arr||[]).map(v=>`<label class="check"><input type="checkbox" value="${esc(v)}">${esc(v)}</label>`).join("");
     if(o.origin && o.origin.length)  $("#originOpts").innerHTML  = optBtns(o.origin);
     if(o.wrapper && o.wrapper.length) $("#wrapperOpts").innerHTML = optBtns(o.wrapper);
-    if(o.binder && o.binder.length)  $("#binderGrid").innerHTML  = checks(o.binder);
-    if(o.filler && o.filler.length)  $("#fillerOpts").innerHTML  = optBtns(o.filler);
+    if(o.binder && o.binder.length)  $("#binderOpts").innerHTML  = optBtns(o.binder);
+    if(o.filler && o.filler.length)  $("#fillerGrid").innerHTML  = checks(o.filler);
   }
   async function loadOptions(){
     try{
