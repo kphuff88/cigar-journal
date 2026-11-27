@@ -298,6 +298,8 @@
   @media (prefers-reduced-motion:reduce){.splash-icon,.splash-name,.splash-sub{animation:none}}
 </style>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><radialGradient id="favGrad" cx="42%" cy="35%" r="72%"><stop offset="0%" stop-color="#FFEE99"/><stop offset="60%" stop-color="#FDB813"/><stop offset="100%" stop-color="#E88A00"/></radialGradient></defs></svg>
+
 <div id="splash">
   <img class="splash-icon" src="icon-512.png" alt="Cigar Log">
   <div class="splash-name">Cigar Log</div>
@@ -343,7 +345,7 @@
   </div>
   <div class="main-controls">
     <select id="cigarJump" class="cigar-jump"><option value="">Jump to a cigar…</option></select>
-    <button id="favFilterBtn" class="fav-chip" title="Show favorites only" aria-label="Show favorites only"><svg class="smiley" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.3c.9 1.2 2.1 1.9 3.5 1.9s2.6-.7 3.5-1.9"/><circle cx="9" cy="10" r="1.05" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.05" fill="currentColor" stroke="none"/></svg></button>
+    <button id="favFilterBtn" class="fav-chip" title="Show favorites only" aria-label="Show favorites only"><svg class="smiley" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="url(#favGrad)" stroke="#C57A00" stroke-width="1.5"/><ellipse cx="50" cy="20" rx="20" ry="7" fill="#fff" opacity="0.3"/><circle cx="38" cy="46" r="5.5" fill="#4A2F0C"/><circle cx="62" cy="46" r="5.5" fill="#4A2F0C"/><circle cx="40" cy="44" r="1.6" fill="#fff" opacity="0.8"/><circle cx="64" cy="44" r="1.6" fill="#fff" opacity="0.8"/><path d="M33 60 Q50 78 67 60" fill="none" stroke="#4A2F0C" stroke-width="6" stroke-linecap="round"/></svg></button>
   </div>
   <div class="grid" id="list"></div>
 </main>
@@ -664,7 +666,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-25";
+  const APP_VERSION = "2026.11.27-26";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -717,7 +719,7 @@
   }
 
   const esc = s => (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const SMILEY = '<svg class="smiley" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.3c.9 1.2 2.1 1.9 3.5 1.9s2.6-.7 3.5-1.9"/><circle cx="9" cy="10" r="1.05" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.05" fill="currentColor" stroke="none"/></svg>';
+  const SMILEY = '<svg class="smiley" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="url(#favGrad)" stroke="#C57A00" stroke-width="1.5"/><ellipse cx="50" cy="20" rx="20" ry="7" fill="#fff" opacity="0.3"/><circle cx="38" cy="46" r="5.5" fill="#4A2F0C"/><circle cx="62" cy="46" r="5.5" fill="#4A2F0C"/><circle cx="40" cy="44" r="1.6" fill="#fff" opacity="0.8"/><circle cx="64" cy="44" r="1.6" fill="#fff" opacity="0.8"/><path d="M33 60 Q50 78 67 60" fill="none" stroke="#4A2F0C" stroke-width="6" stroke-linecap="round"/></svg>';
   function ratingColor(n){ n=+n||0; if(n<=0) return null; if(n<=3) return "#d8463a"; if(n<=5) return "#e08a2e"; if(n<=8) return "#e3c23c"; return "#5faa4e"; }
   function stars(n){ n=+n||0; const col=ratingColor(n); let h=""; for(let i=1;i<=10;i++){ h += i<=n ? `<span style="color:${col}">★</span>` : `<span class="off">★</span>`; } return h; }
 
