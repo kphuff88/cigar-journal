@@ -522,7 +522,22 @@
         <label class="check"><input type="checkbox" value="PA Broadleaf">PA Broadleaf</label>
       </div>
     </div>
-    <div class="field"><label>Filler(s)</label><input id="f_filler" placeholder="e.g. Ligero, Viso" autocomplete="off"></div>
+    <div class="field"><label>Filler(s)</label>
+      <div class="combo" data-combo>
+        <input id="f_filler" placeholder="Type or choose…" autocomplete="off">
+        <button type="button" class="combo-caret" aria-label="Show list" tabindex="-1">▾</button>
+        <div class="combo-list" id="fillerOpts" hidden>
+          <button type="button" data-val="Ligero">Ligero</button>
+          <button type="button" data-val="Seco">Seco</button>
+          <button type="button" data-val="Viso">Viso</button>
+          <button type="button" data-val="Nicaragua">Nicaragua</button>
+          <button type="button" data-val="Dominican">Dominican</button>
+          <button type="button" data-val="Honduras">Honduras</button>
+          <button type="button" data-val="Mexican">Mexican</button>
+          <button type="button" data-val="Pennsylvania">Pennsylvania</button>
+        </div>
+      </div>
+    </div>
     <div class="field">
       <label>Favorite</label>
       <button type="button" class="fav-toggle" id="favToggle">♡ Not a favorite</button>
@@ -649,7 +664,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-7";
+  const APP_VERSION = "2026.11.27-8";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1263,6 +1278,7 @@
     origin:["Cameroon","Cuba","Dominican","Ecuador","Honduras","Indonesia","Mexico","Nicaragua","US"],
     wrapper:["Connecticut Shade","Connecticut Broadleaf","Habano","Corojo","Cameroon","Sumatra","San Andrés","Criollo","Brazilian","PA Broadleaf"],
     binder:["Connecticut Shade","Connecticut Broadleaf","Habano","Corojo","Cameroon","Sumatra","San Andrés","Criollo","Brazilian","PA Broadleaf"],
+    filler:["Ligero","Seco","Viso","Nicaragua","Dominican","Honduras","Mexican","Pennsylvania"],
   };
   function applyOptions(o){
     o = o || {};
@@ -1271,12 +1287,13 @@
     if(o.origin && o.origin.length)  $("#originOpts").innerHTML  = optBtns(o.origin);
     if(o.wrapper && o.wrapper.length) $("#wrapperOpts").innerHTML = optBtns(o.wrapper);
     if(o.binder && o.binder.length)  $("#binderGrid").innerHTML  = checks(o.binder);
+    if(o.filler && o.filler.length)  $("#fillerOpts").innerHTML  = optBtns(o.filler);
   }
   async function loadOptions(){
     try{
       const { data, error } = await sb.from("app_options").select("category,value,sort_order").order("sort_order");
       if(error || !data || !data.length) return;
-      const o={origin:[],wrapper:[],binder:[]};
+      const o={origin:[],wrapper:[],binder:[],filler:[]};
       data.forEach(r=>{ if(o[r.category]) o[r.category].push(r.value); });
       applyOptions(o);
     }catch(e){}
@@ -1818,7 +1835,7 @@
     try{
       const d = await adminCall("options-get");
       const o=(d&&d.options)||{};
-      const groups=[["origin","Origin"],["wrapper","Wrapper"],["binder","Binder"]];
+      const groups=[["origin","Origin"],["wrapper","Wrapper"],["binder","Binder"],["filler","Filler"]];
       box.innerHTML = groups.map(([cat,label])=>{
         const items=o[cat]||[];
         const chips = items.map(it=>`<span class="chip">${esc(it.value)}<button data-rm="${esc(it.id)}" aria-label="Remove">×</button></span>`).join("") || `<span class="admin-empty">None yet</span>`;

@@ -167,7 +167,7 @@ async function deleteUser(userId: string, callerId: string) {
 /* ---------- dropdown options ---------- */
 async function getOptions() {
   const r = await rest("app_options?select=id,category,value,sort_order&order=category,sort_order");
-  const groups: Record<string, Array<{ id: string; value: string }>> = { origin: [], wrapper: [], binder: [] };
+  const groups: Record<string, Array<{ id: string; value: string }>> = { origin: [], wrapper: [], binder: [], filler: [] };
   if (Array.isArray(r.data)) for (const row of r.data as Array<{ id: string; category: string; value: string }>) {
     if (groups[row.category]) groups[row.category].push({ id: row.id, value: row.value });
   }
@@ -175,7 +175,7 @@ async function getOptions() {
 }
 async function addOption(category: string, value: string) {
   category = (category || "").trim(); value = (value || "").trim();
-  if (!["origin", "wrapper", "binder"].includes(category)) return { error: "Bad category." };
+  if (!["origin", "wrapper", "binder", "filler"].includes(category)) return { error: "Bad category." };
   if (!value) return { error: "Enter a value." };
   const r = await rest("app_options", {
     method: "POST",

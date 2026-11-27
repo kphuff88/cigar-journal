@@ -7,7 +7,7 @@
 -- 1. Dropdown option lists (shared; the Admin screen edits these)
 create table if not exists public.app_options (
   id         uuid primary key default gen_random_uuid(),
-  category   text not null check (category in ('origin','wrapper','binder')),
+  category   text not null check (category in ('origin','wrapper','binder','filler')),
   value      text not null,
   sort_order int2 default 0,
   created_at timestamptz default now()
@@ -52,7 +52,9 @@ select v.category, v.value, v.sort_order from (values
   ('wrapper','Brazilian',9),('wrapper','PA Broadleaf',10),
   ('binder','Connecticut Shade',1),('binder','Connecticut Broadleaf',2),('binder','Habano',3),('binder','Corojo',4),
   ('binder','Cameroon',5),('binder','Sumatra',6),('binder','San Andrés',7),('binder','Criollo',8),
-  ('binder','Brazilian',9),('binder','PA Broadleaf',10)
+  ('binder','Brazilian',9),('binder','PA Broadleaf',10),
+  ('filler','Ligero',1),('filler','Seco',2),('filler','Viso',3),('filler','Nicaragua',4),
+  ('filler','Dominican',5),('filler','Honduras',6),('filler','Mexican',7),('filler','Pennsylvania',8)
 ) as v(category,value,sort_order)
 where not exists (select 1 from public.app_options);
 
