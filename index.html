@@ -662,7 +662,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-13";
+  const APP_VERSION = "2026.11.27-14";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1073,19 +1073,26 @@
   }
   async function loadCigars(){
     $("#list").innerHTML = `<div class="loading"><div class="spinner"></div>Loading your cigars…</div>`;
-    try{
-      const { data, error } = await withTimeout(sb.from("cigars").select("*").order("updated_at",{ascending:false}), 15000);
-      if(error){
-        if(/relation .*cigars.* does not exist|not find the table|schema cache/i.test(error.message)){
-          retryUI(`<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then tap Retry.</p></div>`);
+    // The first request on load can lose a race with the sign-in finishing, so
+    // retry a few times quietly before ever showing an error.
+    let lastErr = null, schemaMissing = false;
+    for(let i=0; i<4; i++){
+      try{
+        const { data, error } = await withTimeout(sb.from("cigars").select("*").order("updated_at",{ascending:false}), 9000);
+        if(error){
+          lastErr = error;
+          if(/relation .*cigars.* does not exist|not find the table|schema cache/i.test(error.message||"")){ schemaMissing = true; break; }
         }else{
-          retryUI(`<div class="empty"><div class="big">⚠️</div><p>Couldn't load cigars.</p><p>${esc(error.message)}</p></div>`);
+          cigars = data||[]; render(); return;   // success
         }
-        return;
-      }
-      cigars = data||[];
-      render();
-    }catch(e){
+      }catch(e){ lastErr = e; }
+      if(i < 3) await new Promise(r=>setTimeout(r, 500 + i*700));   // 0.5s, 1.2s, 1.9s
+    }
+    if(schemaMissing){
+      retryUI(`<div class="empty"><div class="big">🛠️</div><p><b>Almost ready.</b></p><p>The database tables still need to be created. Run the one-time setup SQL in Supabase, then tap Retry.</p></div>`);
+    }else if(lastErr && lastErr.message && !/timeout/i.test(lastErr.message)){
+      retryUI(`<div class="empty"><div class="big">⚠️</div><p>Couldn't load cigars.</p><p>${esc(lastErr.message)}</p></div>`);
+    }else{
       retryUI(`<div class="empty"><div class="big">📡</div><p><b>Couldn't reach the server.</b></p><p>Check your connection and tap Retry. (Supabase may be having a brief hiccup.)</p></div>`);
     }
   }
