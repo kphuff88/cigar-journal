@@ -37,7 +37,8 @@
   header h1 small{display:block;font-size:11px;color:var(--faint);font-weight:500;letter-spacing:.6px;margin-top:1px;text-transform:uppercase}
   .tools{display:flex;align-items:center;gap:8px;position:relative}
   .count-pill{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:34px;padding:0 10px;font-size:15px;font-weight:800;color:var(--gold);background:none;border:1px solid var(--gold-dim);border-radius:10px;white-space:nowrap}
-  .icon-btn{background:none;border:1px solid var(--gold-dim);color:var(--text);border-radius:10px;width:38px;height:34px;font-size:17px;cursor:pointer}
+  .icon-btn{background:none;border:1px solid var(--gold-dim);color:var(--text);border-radius:10px;width:38px;height:34px;font-size:17px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+  .icon-btn.add-icon{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10}
 
   main{padding:8px 16px 20px;max-width:680px;margin:0 auto}
   .search-wrap{position:relative;margin:4px 0 16px}
@@ -314,6 +315,7 @@
   </div>
   <div class="tools">
     <span class="count-pill" id="countPill">0</span>
+    <button class="icon-btn add-icon" id="addBtn" aria-label="Add cigar" title="Add cigar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
     <button class="icon-btn" id="shopsBtn" aria-label="Cigar shops" title="Cigar shops"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 22c4.5-5 7-8 7-11a7 7 0 1 0-14 0c0 3 2.5 6 7 11z"/><circle cx="12" cy="11" r="2.6"/></svg></button>
     <button class="icon-btn" id="menuBtn" aria-label="Menu">⋮</button>
     <div class="menu-pop" id="menuPop">
@@ -351,10 +353,6 @@
   <div class="grid" id="list"></div>
 </main>
 
-<button class="fab" id="addBtn">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  Add Cigar
-</button>
 
 <!-- Auth gate -->
 <div class="overlay gate" id="gateOverlay">
@@ -667,7 +665,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-30";
+  const APP_VERSION = "2026.11.27-31";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
