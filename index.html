@@ -195,6 +195,7 @@
   .menu-pop button:active{background:#ffffff12}
   .menu-pop hr{border:none;border-top:1px solid var(--line);margin:4px 2px}
   .menu-user{font-size:12.5px;color:var(--faint);padding:8px 12px 10px;line-height:1.4}
+  .menu-ver{font-size:11px;color:var(--faint);opacity:.75;padding:8px 12px 4px;text-align:center}
   .menu-user b{color:var(--gold);font-weight:700}
 
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-bottom));z-index:80;background:#140d07;border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:88%;text-align:center;box-shadow:0 6px 20px #0008}
@@ -213,6 +214,8 @@
   .gate label{display:block;text-align:left;font-size:12.5px;color:var(--muted);font-weight:600;margin:0 0 6px}
   .gate input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#241610;color:var(--text);font-size:16px;margin-bottom:14px}
   .gate input:focus{outline:2px solid var(--gold-dim)}
+  .gate .keep-row{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:14px;color:var(--muted);font-weight:500;cursor:pointer;text-align:left}
+  .gate .keep-row input{width:20px;height:20px;margin:0;flex:0 0 auto;accent-color:var(--gold-soft);cursor:pointer}
   .gate .go{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;background:linear-gradient(180deg,var(--gold-soft) 0%,var(--gold-dim) 100%);color:#2b1a10;cursor:pointer}
   .gate .go:disabled{opacity:.6}
   .gate .go:active{filter:brightness(.95)}
@@ -287,6 +290,7 @@
       <button id="aboutBtn">ℹ️ About this app</button>
       <hr>
       <button id="logoutBtn">🔓 Log out</button>
+      <div class="menu-ver" id="menuVer"></div>
     </div>
   </div>
 </header>
@@ -338,6 +342,8 @@
     <input id="authUser" type="email" placeholder="you@example.com" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email">
     <label for="authPass">Password</label>
     <input id="authPass" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+
+    <label class="keep-row"><input type="checkbox" id="keepLogged" checked> Keep me logged in</label>
 
     <button class="go" id="authGo">Log in</button>
     <p class="fine" id="gateFine">Your email and password are stored securely by your Supabase backend. Photos and ratings are saved to your private cloud space.</p>
@@ -583,15 +589,37 @@
     });
   }
 
+  /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
+  const APP_VERSION = "2026.11.27-1";
+
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
   const SUPABASE_KEY = "sb_publishable_GilyxsrHXHekyrrzkjlNYw_-3Nq6Idf";
   const EMAIL_DOMAIN = "cigarlog.app";   // synthetic address derived from username
   const BUCKET = "photos";
 
+  // "Keep me logged in": when checked, the session lives in localStorage
+  // (survives closing the app); when unchecked, it lives in sessionStorage
+  // (cleared when the browser/app is fully closed). Default: keep.
+  let keepLoggedIn = true;
+  try{ keepLoggedIn = localStorage.getItem("cigar_keep") !== "0"; }catch(e){}
+  const authStorage = {
+    getItem(k){
+      try{ const v = localStorage.getItem(k); return v !== null ? v : sessionStorage.getItem(k); }
+      catch(e){ return null; }
+    },
+    setItem(k, v){
+      try{
+        if(keepLoggedIn){ localStorage.setItem(k, v); sessionStorage.removeItem(k); }
+        else { sessionStorage.setItem(k, v); localStorage.removeItem(k); }
+      }catch(e){}
+    },
+    removeItem(k){ try{ localStorage.removeItem(k); sessionStorage.removeItem(k); }catch(e){} },
+  };
+
   let sb = null;
   if(window.supabase && window.supabase.createClient){
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true}});
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {auth:{persistSession:true, autoRefreshToken:true, storage:authStorage}});
   }
 
   /* ---- State ---- */
@@ -681,6 +709,11 @@
     if(p.length<6){ showErr("Password must be at least 6 characters."); return; }
     if(!sb){ showErr("Couldn't load the backend. Check your connection and refresh."); return; }
 
+    // Honor the "Keep me logged in" choice before signing in.
+    const keepBox = $("#keepLogged");
+    keepLoggedIn = keepBox ? keepBox.checked : true;
+    try{ localStorage.setItem("cigar_keep", keepLoggedIn ? "1" : "0"); }catch(e){}
+
     const btn=$("#authGo"); btn.disabled=true; btn.textContent = authMode==="login"?"Logging in…":"Creating…";
     try{
       const email = u.toLowerCase();
@@ -713,9 +746,11 @@
     // Belt-and-suspenders: clear any lingering Supabase auth token, then
     // force the login screen up even if the auth event doesn't fire.
     try{
-      for(let i=localStorage.length-1; i>=0; i--){
-        const k=localStorage.key(i);
-        if(k && /^sb-.*-auth-token/.test(k)) localStorage.removeItem(k);
+      for(const store of [localStorage, sessionStorage]){
+        for(let i=store.length-1; i>=0; i--){
+          const k=store.key(i);
+          if(k && /^sb-.*-auth-token/.test(k)) store.removeItem(k);
+        }
       }
     }catch(e){}
     onSession(null);
@@ -1623,15 +1658,18 @@
   setTimeout(hideSplash, 3500); // safety net
   (async function init(){
     setAuthMode("login");
+    { const kb=$("#keepLogged"); if(kb) kb.checked = keepLoggedIn; }
     if(!sb){ showErr("Couldn't reach the backend service. Refresh to try again."); $("#gateOverlay").classList.add("open"); hideSplash(); return; }
     // Self-logout escape hatch: open the app with ?logout=1 to force a
     // clean sign-out (useful if the menu Log out ever gets stuck).
     if(new URLSearchParams(location.search).has("logout")){
       try{ await sb.auth.signOut({ scope:"local" }); }catch(e){}
       try{
-        for(let i=localStorage.length-1; i>=0; i--){
-          const k=localStorage.key(i);
-          if(k && /^sb-.*-auth-token/.test(k)) localStorage.removeItem(k);
+        for(const store of [localStorage, sessionStorage]){
+          for(let i=store.length-1; i>=0; i--){
+            const k=store.key(i);
+            if(k && /^sb-.*-auth-token/.test(k)) store.removeItem(k);
+          }
         }
       }catch(e){}
       try{ history.replaceState(null, "", location.pathname); }catch(e){}
@@ -1639,7 +1677,38 @@
     sb.auth.onAuthStateChange((_e,s)=>onSession(s));
     try{ const { data } = await sb.auth.getSession(); onSession(data.session); }catch(e){ onSession(null); }
     if(isiOS) maybeShowInstallBar("ios");
+    const mv=$("#menuVer"); if(mv) mv.textContent = "Version " + APP_VERSION;
+    startUpdateWatch();
     hideSplash();
   })();
+
+  /* ---- Auto-update watch: reload when a newer release is live ---- */
+  let pendingVersion = "";
+  function anyOverlayOpen(){
+    return !!document.querySelector(".overlay.open, .cropper.open");
+  }
+  function applyUpdateIfSafe(){
+    if(!pendingVersion || anyOverlayOpen()) return;
+    try{
+      if(sessionStorage.getItem("cigar_reloaded_for") === pendingVersion) return; // avoid any loop
+      sessionStorage.setItem("cigar_reloaded_for", pendingVersion);
+    }catch(e){}
+    location.reload();
+  }
+  async function checkForUpdate(){
+    try{
+      const r = await fetch("version.txt?cb=" + Date.now(), { cache:"no-store" });
+      if(!r.ok) return;
+      const v = (await r.text()).trim();
+      if(v && v !== APP_VERSION){ pendingVersion = v; applyUpdateIfSafe(); }
+    }catch(e){}
+  }
+  function startUpdateWatch(){
+    setTimeout(checkForUpdate, 6000);
+    setInterval(checkForUpdate, 10*60*1000);
+    document.addEventListener("visibilitychange", ()=>{
+      if(document.visibilityState === "visible"){ applyUpdateIfSafe(); checkForUpdate(); }
+    });
+  }
 })();
 </script>

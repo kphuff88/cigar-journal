@@ -13,7 +13,7 @@
 //    never touched by this file.
 // ============================================================
 
-const VERSION = "2026-11-27a";
+const VERSION = "2026-11-27b";
 const CACHE = "cigar-log-" + VERSION;
 const ASSETS = [
   "./",
@@ -47,6 +47,13 @@ self.addEventListener("fetch", (e) => {
   // Only handle our own site. Supabase (auth, database, storage) and the
   // Supabase library on its CDN must pass straight through, untouched.
   if (url.origin !== location.origin) return;
+
+  // The version marker must always come from the network (never cached),
+  // so the app can detect a new release.
+  if (url.pathname.endsWith("/version.txt")) {
+    e.respondWith(fetch(req).catch(() => caches.match(req) || Response.error()));
+    return;
+  }
 
   const isPage =
     req.mode === "navigate" ||
