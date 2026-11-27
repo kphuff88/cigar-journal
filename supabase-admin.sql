@@ -19,6 +19,7 @@ drop policy if exists "app_options_read" on public.app_options;
 create policy "app_options_read" on public.app_options
   for select using (auth.role() = 'authenticated');
 grant select on table public.app_options to authenticated;
+grant select, insert, update, delete on table public.app_options to service_role;
 -- (Adds/removes happen only through the admin Edge Function, using the
 --  service role — so regular users can read the lists but never change them.)
 
@@ -34,7 +35,12 @@ drop policy if exists "comps_read_own" on public.comps;
 create policy "comps_read_own" on public.comps
   for select using (auth.uid() = user_id);
 grant select on table public.comps to authenticated;
+grant select, insert, update, delete on table public.comps to service_role;
 -- (Only the admin Edge Function writes here.)
+
+-- The admin Edge Function (service_role) also reads these existing tables:
+grant select, insert, update, delete on table public.shops  to service_role;
+grant select, insert, update, delete on table public.cigars to service_role;
 
 -- 3. Seed the dropdown lists with the current defaults (only if empty)
 insert into public.app_options (category, value, sort_order)
