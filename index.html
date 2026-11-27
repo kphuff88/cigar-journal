@@ -577,9 +577,9 @@
   <div class="sheet">
     <div class="sheet-head">
       <button class="link-btn muted" id="detailClose">‹ Back</button>
-      <span style="display:flex;gap:2px">
-        <button class="link-btn" id="detailShare">⤴ Share</button>
-        <button class="link-btn" id="detailEdit">Edit</button>
+      <span style="display:flex;align-items:center;gap:10px">
+        <button class="link-btn muted" id="detailShare">⤴ Share</button>
+        <button class="link-btn muted" id="detailEdit">Edit</button>
       </span>
     </div>
     <div id="detailBody"></div>
@@ -665,7 +665,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-37";
+  const APP_VERSION = "2026.11.27-38";
 
   /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
   const IS_MOBILE = (function(){
