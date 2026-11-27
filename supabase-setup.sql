@@ -16,6 +16,7 @@ create table if not exists public.cigars (
   favorite    boolean default false,
   quantity    int2 default 0,
   size          text default '',
+  length      text default '',
   origin      text default '',
   wrapper     text default '',
   binder      text default '',
@@ -38,6 +39,7 @@ alter table public.cigars add column if not exists wrapper text default '';
 alter table public.cigars add column if not exists binder  text default '';
 alter table public.cigars add column if not exists filler  text default '';
 alter table public.cigars add column if not exists size          text default '';
+alter table public.cigars add column if not exists length      text default '';
 alter table public.cigars add column if not exists purchase_date date;
 alter table public.cigars add column if not exists favorite boolean default false;
 alter table public.cigars add column if not exists quantity int2 default 0;
