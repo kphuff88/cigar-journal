@@ -709,7 +709,16 @@
   }
 
   async function logout(){
-    if(sb) await sb.auth.signOut();
+    try{ if(sb) await sb.auth.signOut({ scope:"local" }); }catch(e){}
+    // Belt-and-suspenders: clear any lingering Supabase auth token, then
+    // force the login screen up even if the auth event doesn't fire.
+    try{
+      for(let i=localStorage.length-1; i>=0; i--){
+        const k=localStorage.key(i);
+        if(k && /^sb-.*-auth-token/.test(k)) localStorage.removeItem(k);
+      }
+    }catch(e){}
+    onSession(null);
   }
 
   async function onSession(s){
