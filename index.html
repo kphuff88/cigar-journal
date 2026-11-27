@@ -362,10 +362,6 @@
       <div class="field"><label>Binder</label><input id="f_binder" placeholder="e.g. Nicaraguan" autocomplete="off"></div>
     </div>
     <div class="field"><label>Filler(s)</label><input id="f_filler" placeholder="e.g. Nicaragua (Ligero, Viso)" autocomplete="off"></div>
-    <div class="row">
-      <div class="field"><label>Purchase date</label><input id="f_purchase" type="date"></div>
-      <div class="field"><label>In humidor (qty)</label><input id="f_qty" type="number" inputmode="numeric" min="0" placeholder="0"></div>
-    </div>
     <div class="field">
       <label>Favorite</label>
       <button type="button" class="fav-toggle" id="favToggle">♡ Not a favorite</button>
@@ -725,12 +721,15 @@
   async function saveCigar(){
     const brand=$("#f_brand").value.trim(), name=$("#f_name").value.trim(), notes=$("#f_notes").value.trim();
     const origin=$("#f_origin").value.trim(), wrapper=$("#f_wrapper").value.trim(), binder=$("#f_binder").value.trim(), filler=$("#f_filler").value.trim();
-    const size=$("#f_size").value.trim(), purchase_date=$("#f_purchase").value || null, quantity=parseInt($("#f_qty").value,10)||0;
+    const size=$("#f_size").value.trim();
     if(!brand && !name && !notes && !photoBand && !photoCigar){ toast("Add a photo or some details first"); return; }
     const btn=$("#saveBtn"); btn.disabled=true; btn.textContent="Saving…";
     try{
       const uid=session.user.id;
       const existing = editingId ? cigars.find(c=>c.id===editingId) : null;
+      // Purchase date and quantity are no longer edited in the form; keep any existing values untouched.
+      const purchase_date = existing ? (existing.purchase_date || null) : null;
+      const quantity = existing ? (existing.quantity || 0) : 0;
       const id = editingId || (crypto.randomUUID ? crypto.randomUUID() : "c"+Date.now()+Math.random().toString(36).slice(2));
 
       let band_path  = existing ? existing.band_path  : null;
@@ -874,8 +873,6 @@
     $("#f_wrapper").value=c?c.wrapper||"":"";
     $("#f_binder").value =c?c.binder||"":"";
     $("#f_filler").value =c?c.filler||"":"";
-    $("#f_purchase").value=c?(c.purchase_date||""):"";
-    $("#f_qty").value = currentQty?String(currentQty):"";
     $("#f_notes").value=c?c.notes||"":"";
     $("#detailOverlay").classList.remove("open");
     const ov=$("#editorOverlay"); ov.classList.add("open"); ov.scrollTop=0;
