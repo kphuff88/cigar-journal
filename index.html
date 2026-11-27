@@ -649,7 +649,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-5";
+  const APP_VERSION = "2026.11.27-6";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -905,8 +905,13 @@
     // cigars on a subscription/network check. Then quietly verify in the
     // background and drop the trial bar if they're actually subscribed/comped.
     if(t.inTrial && !forceCheck && !justPaid){
-      hidePaywall(); setTrialBar(s); await loadCigars();
-      accessOK().then(ok=>{ if(ok){ subscribed = true; $("#trialBar").style.display="none"; } });
+      hidePaywall();
+      $("#trialBar").style.display="none";   // don't flash it — decide after the check
+      await loadCigars();
+      accessOK().then(ok=>{
+        if(ok){ subscribed = true; $("#trialBar").style.display="none"; }
+        else { setTrialBar(s); }             // genuinely in trial & not subscribed → show it
+      });
       return;
     }
 

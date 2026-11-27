@@ -77,10 +77,17 @@ _Last updated: 2026-11-27_
 9. **Editor polish (phone-first):** one field per row, white field backgrounds with
    dark-brown text, Band/Length fields, type-or-pick dropdowns for Origin & Wrapper,
    and a multi-select checkbox list for Binders.
-10. **Auto-update (service worker):** the app now refreshes itself. Each time it's
-    opened online it loads the newest version automatically — no more re-adding to the
-    home screen after an update. Works offline too (shows the last saved copy).
-    _(File: `sw.js`. Added 2026-11-27.)_
+10. **Subscriptions (15-day free trial → $4.99/year via Stripe):** everyone gets 15
+    days free from signup (no card). After that a paywall appears; they pay on Stripe's
+    secure page. Secret Stripe key kept server-side. _(Setup: `BILLING_SETUP.md`;
+    functions `create-checkout`, `check-subscription`.)_
+11. **Owner Admin screen** (⋮ menu, only for the admin email): edit the Origin/Wrapper/
+    Binder dropdown lists for everyone, see all users, give **free access** (comp) to
+    friends/testers, delete accounts, and moderate the cigar shops. _(Setup:
+    `ADMIN_SETUP.md`; function `admin`; tables `app_options`, `comps`.)_
+
+> Note: a service worker was tried for auto-updates but **removed** — it caused blank
+> screens and refresh loops. The app now loads straight from the web every time.
 
 ---
 
