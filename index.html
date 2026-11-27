@@ -649,7 +649,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-6";
+  const APP_VERSION = "2026.11.27-7";
 
   /* ---- Supabase config ---- */
   const SUPABASE_URL = "https://roemelqxveexgnylmfcm.supabase.co";
@@ -1493,6 +1493,7 @@
     $("#shopSearch").value="";
     const ov=$("#shopsOverlay"); ov.classList.add("open"); ov.scrollTop=0;
     await loadShops();
+    geocodeMissingShops();
     // Auto-locate so distances show without an extra tap (silent if blocked)
     if(!myLoc){ try{ myLoc=await getLocation(); renderShops(); }catch(e){} }
   }
@@ -1566,7 +1567,7 @@
   }
   async function nearMe(){
     const btn=$("#nearMeBtn"), prev=btn.textContent; btn.textContent="Locating…"; btn.disabled=true;
-    try{ myLoc=await getLocation(); renderShops(); toast("Sorted by distance"); }
+    try{ myLoc=await getLocation(); renderShops(); geocodeMissingShops(); toast("Sorted by distance"); }
     catch(e){ toast("Couldn't get your location — allow location access and retry"); }
     finally{ btn.textContent=prev; btn.disabled=false; }
   }
@@ -1599,6 +1600,26 @@
     }catch(e){}
     return null;
   }
+  // Fill in coordinates for shops that were saved without a map pin, so
+  // distances can show. Runs quietly, one at a time (polite to the map service).
+  let _geoBusy=false;
+  async function geocodeMissingShops(){
+    if(_geoBusy) return;
+    const todo=shops.filter(s=>(s.lat==null||s.lng==null) && !s._geoTried && (s.address||s.city));
+    if(!todo.length) return;
+    _geoBusy=true;
+    for(const s of todo){
+      s._geoTried=true;
+      const loc=await geocode([s.address,s.city].filter(Boolean).join(", "));
+      if(loc){
+        s.lat=loc.lat; s.lng=loc.lng;
+        renderShops();
+        if(s.created_by===session.user.id){ try{ await sb.from("shops").update({lat:loc.lat,lng:loc.lng}).eq("id",s.id); }catch(e){} }
+      }
+      await new Promise(r=>setTimeout(r,1100));
+    }
+    _geoBusy=false;
+  }
   async function saveShop(){
     const name=$("#s_name").value.trim();
     if(!name){ toast("Enter a shop name"); return; }
@@ -1606,7 +1627,7 @@
     const btn=$("#shopSave"); btn.disabled=true; btn.textContent="Saving…";
     try{
       let loc=shopLoc;
-      if(!loc && (address||city)){ setLocStatus("Looking up address…",false); loc=await geocode([name,address,city].filter(Boolean).join(", ")); if(loc) setLocStatus("Found the address ✓",true); }
+      if(!loc && (address||city)){ setLocStatus("Looking up address…",false); loc=await geocode([address,city].filter(Boolean).join(", ")); if(loc) setLocStatus("Found the address ✓",true); }
       const row={ name, address, city, notes, lat:loc?loc.lat:null, lng:loc?loc.lng:null, created_by:session.user.id };
       if(shopEditingId){ const { error }=await sb.from("shops").update(row).eq("id",shopEditingId); if(error) throw error; }
       else { const { error }=await sb.from("shops").insert(row); if(error) throw error; }
