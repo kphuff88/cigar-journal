@@ -85,6 +85,12 @@ _Last updated: 2026-11-27_
     Binder dropdown lists for everyone, see all users, give **free access** (comp) to
     friends/testers, delete accounts, and moderate the cigar shops. _(Setup:
     `ADMIN_SETUP.md`; function `admin`; tables `app_options`, `comps`.)_
+12. **Wish list + CSV import/export** (⋮ menu): a **Wish list** of cigars to try —
+    add brand/name/note/target price, and tap **Got it** to move one into your log.
+    **Export** your log to CSV (on a phone it opens the Share sheet → save to Files or
+    email it). **Import cigars (CSV)** reads a spreadsheet back in (same format Export
+    makes; lenient about column names). _(Setup: `supabase-wishlist.sql` for the wish
+    list; import/export need no setup.)_
 
 > Note: a service worker was tried for auto-updates but **removed** — it caused blank
 > screens and refresh loops. The app now loads straight from the web every time.
@@ -108,6 +114,8 @@ from any device.
 - [ ] **Re-run `supabase-setup.sql`** (or the short ALTER snippet) to add the new cigar
       columns: `profile`, `origin`, `wrapper`, `binder`, `filler`. Until then the app
       still saves, but those new fields won't be stored.
+- [ ] **Run `supabase-wishlist.sql`** in Supabase → SQL Editor (creates the Wish List
+      table). Until then the ⋮ menu → **Wish list** screen says "Almost ready".
 - [x] **Scan band (AI auto-fill) is LIVE** — free Google AI key + `scan-band` Edge
       Function + `GEMINI_API_KEY` secret are all set up and working (tested 2026-11-27).
       Photograph a band → tap ✨ Scan → Brand & Name fill in automatically. Friends

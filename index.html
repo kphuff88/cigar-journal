@@ -122,6 +122,19 @@
   .sheet-btn{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10;border:none;border-radius:10px;height:34px;padding:0 11px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
   .sheet-btn.sheet-icon{padding:0 10px}
   .sh-group{display:flex;align-items:center;gap:7px}
+  .wish-intro{font-size:13px;color:var(--faint);margin:0 0 14px;line-height:1.45}
+  .wish-add{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 14px 4px;margin-bottom:20px}
+  .wish-add .save-btn{margin-top:4px}
+  .wish-item{background:#ffffff;border:1px solid #e4d8c2;color:#2b1a10;border-radius:14px;padding:13px 15px;margin-bottom:12px}
+  .wish-item .wi-brand{font-size:13px;color:#9a7418;font-weight:600}
+  .wish-item .wi-name{font-size:19px;font-weight:700;line-height:1.2}
+  .wish-item .wi-note{font-size:14px;color:#5a4a38;margin-top:5px}
+  .wish-item .wi-price{font-size:13px;color:#7a6a52;margin-top:3px;font-weight:600}
+  .wish-item .wi-actions{display:flex;gap:9px;margin-top:12px}
+  .wish-item .wi-actions button{flex:1;height:40px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+  .wi-got{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim));color:#2b1a10}
+  .wi-remove{background:#f0e6d4;color:#8a5a3a}
+  .wish-empty{text-align:center;color:var(--faint);font-size:14px;padding:18px 10px}
 
   .photo-row{display:flex;gap:12px;margin-bottom:18px}
   .photo-slot{flex:1;aspect-ratio:1/1;border-radius:var(--radius);background:#190e07;border:2px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;overflow:hidden;position:relative}
@@ -324,8 +337,10 @@
     <button class="icon-btn" id="menuBtn" aria-label="Menu">⋮</button>
     <div class="menu-pop" id="menuPop">
       <div class="menu-user" id="menuUser"></div>
+      <button id="wishBtn">🌟 Wish list</button>
       <button id="adminBtn" style="display:none">🛠️ Admin</button>
       <button id="exportBtn">⬇️ Export my log (CSV)</button>
+      <button id="importBtn">⬆️ Import cigars (CSV)</button>
       <button id="installBtn">📲 Add to Home Screen</button>
       <button id="aboutBtn">ℹ️ About this app</button>
       <hr>
@@ -632,6 +647,29 @@
   </div>
 </div>
 
+<!-- Wish list -->
+<div class="overlay" id="wishlistOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <button class="sheet-btn" id="wishClose">‹ Back</button>
+      <h2>Wish List</h2>
+      <span style="width:52px"></span>
+    </div>
+    <p class="wish-intro">Cigars you want to try. When you get one, tap <b>Got it</b> to move it into your log.</p>
+    <div class="wish-add">
+      <div class="field"><label>Brand</label><input id="w_brand" placeholder="e.g. Padrón" autocomplete="off"></div>
+      <div class="field"><label>Name</label><input id="w_name" placeholder="e.g. 1964 Anniversary" autocomplete="off"></div>
+      <div class="field"><label>Note (optional)</label><input id="w_note" placeholder="Why you want it, where you saw it…" autocomplete="off"></div>
+      <div class="field"><label>Target price (optional)</label><input id="w_price" placeholder="e.g. $15" autocomplete="off"></div>
+      <button class="save-btn" id="wishAddBtn">★ Add to wish list</button>
+    </div>
+    <div id="wishList"></div>
+  </div>
+</div>
+
+<!-- Hidden file picker for CSV import -->
+<input type="file" id="importFile" accept=".csv,text/csv,text/plain" style="display:none">
+
 <!-- Photo cropper -->
 <div class="overlay cropper" id="cropOverlay">
   <div class="crop-head">
@@ -673,7 +711,7 @@
   }
 
   /* ---- App version (BUMP THIS AND version.txt TOGETHER on each release) ---- */
-  const APP_VERSION = "2026.11.27-45";
+  const APP_VERSION = "2026.11.27-46";
 
   /* ---- Phone vs. computer (Share works on phones/tablets, not desktops) ---- */
   const IS_MOBILE = (function(){
@@ -720,6 +758,7 @@
   let trialDaysLeft = 0;
   let subscribed = false;
   let cigars = [];
+  let wishlist = [];
   let editingId = null;
   let photoBand = null, photoCigar = null;   // {blob} new uploads, or {path} existing, or null
   let currentRating = 0, currentProfile = 0, currentPrice = 0, currentQty = 0, currentFav = false;
@@ -881,6 +920,7 @@
       $("#list").innerHTML="";
       $("#editorOverlay").classList.remove("open");
       $("#detailOverlay").classList.remove("open");
+      $("#wishlistOverlay").classList.remove("open"); wishlist=[];
       $("#payOverlay").classList.remove("open");
       $("#trialBar").style.display="none";
       $("#countPill").textContent="0";
@@ -1705,7 +1745,7 @@
     catch(err){ toast((err&&err.message)||"Couldn't delete"); }
   }
 
-  function exportLog(){
+  async function exportLog(){
     if(!cigars.length){ toast("Nothing to export yet"); return; }
     const cols=["Brand","Name","Band","Length","Origin","Wrapper","Binder","Filler","Rating","Strength","Price","Favorite","Qty","Notes"];
     const q=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
@@ -1715,11 +1755,148 @@
         c.rating||"", c.profile?PROFILE_LABELS[c.profile-1]:"", c.price?"$".repeat(c.price):"",
         c.favorite?"Yes":"", c.quantity||"", c.notes].map(q).join(","));
     });
+    const fname="cigar-log-"+new Date().toISOString().slice(0,10)+".csv";
     const blob=new Blob(["﻿"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
+    // On phones a download link often just opens the file as text, so use the
+    // Share sheet (save to Files, email, etc.) when the device supports it.
+    if(IS_MOBILE && navigator.canShare){
+      try{
+        const file=new File([blob], fname, {type:"text/csv"});
+        if(navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"My Cigar Log"}); return; }
+      }catch(e){ if(e && e.name==="AbortError") return; /* else fall through to download */ }
+    }
     const url=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=url; a.download="cigar-log-"+new Date().toISOString().slice(0,10)+".csv";
+    const a=document.createElement("a"); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),2000);
     toast("Log exported");
+  }
+
+  /* ---------------- Import (CSV) ---------------- */
+  function parseCSV(text){
+    text=String(text).replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+    const rows=[]; let row=[], field="", inQ=false, i=0;
+    while(i<text.length){
+      const ch=text[i];
+      if(inQ){
+        if(ch==='"'){ if(text[i+1]==='"'){ field+='"'; i+=2; continue; } inQ=false; i++; continue; }
+        field+=ch; i++; continue;
+      }
+      if(ch==='"'){ inQ=true; i++; continue; }
+      if(ch===','){ row.push(field); field=""; i++; continue; }
+      if(ch==='\n'){ row.push(field); rows.push(row); row=[]; field=""; i++; continue; }
+      field+=ch; i++;
+    }
+    row.push(field); rows.push(row);
+    if(rows.length && rows[0].length) rows[0][0]=rows[0][0].replace(/^﻿/,"");   // strip BOM
+    return rows.filter(r=>!(r.length===1 && r[0].trim()===""));
+  }
+  function pickImport(){ const el=$("#importFile"); if(el) el.click(); }
+  async function handleImportFile(ev){
+    const file=ev.target.files && ev.target.files[0]; ev.target.value="";
+    if(!file) return;
+    let text; try{ text=await file.text(); }catch(e){ toast("Couldn't read that file"); return; }
+    const rows=parseCSV(text);
+    if(rows.length<2){ toast("That file has no rows to import"); return; }
+    const header=rows[0].map(h=>(h||"").trim().toLowerCase());
+    const find=(...names)=>{ for(const n of names){ const i=header.findIndex(h=>h===n); if(i>=0) return i; } for(const n of names){ const i=header.findIndex(h=>h.includes(n)); if(i>=0) return i; } return -1; };
+    const col={
+      brand:find("brand"), name:find("name","line","series"),
+      size:find("band","vitola","size","shape"), length:find("length"),
+      origin:find("origin","country"), wrapper:find("wrapper"),
+      binder:find("binder"), filler:find("filler"),
+      rating:find("rating"), strength:find("strength","profile","body"),
+      price:find("price"), favorite:find("favorite","favourite"),
+      qty:find("qty","quantity","count"), notes:find("notes","note","comment","review")
+    };
+    const prof=s=>{ const i=PROFILE_LABELS.findIndex(l=>l.toLowerCase()===String(s).trim().toLowerCase()); return i>=0?i+1:null; };
+    const money=s=>{ s=String(s||""); const d=(s.match(/\$/g)||[]).length; if(d>=1&&d<=5) return d; const n=parseInt(s,10); return (n>=1&&n<=5)?n:null; };
+    const items=[];
+    for(let r=1;r<rows.length;r++){
+      const a=rows[r]; if(!a || !a.length) continue;
+      const g=i=>(i>=0 && i<a.length)?String(a[i]||"").trim():"";
+      const brand=g(col.brand), name=g(col.name);
+      if(!brand && !name) continue;
+      const rating=parseInt(g(col.rating),10); const qty=parseInt(g(col.qty),10);
+      const fav=/^(y|yes|true|1|★|star)/i.test(g(col.favorite));
+      items.push({ brand, name, size:g(col.size), length:g(col.length), origin:g(col.origin),
+        wrapper:g(col.wrapper), binder:g(col.binder), filler:g(col.filler),
+        rating:(rating>=1&&rating<=10)?rating:null, profile:prof(g(col.strength)), price:money(g(col.price)),
+        favorite:fav, quantity:(qty>0?qty:0), notes:g(col.notes) });
+    }
+    if(!items.length){ toast("No cigars found in that file"); return; }
+    if(!confirm(`Add ${items.length} cigar${items.length>1?"s":""} from this file to your log?`)) return;
+    const uid=session.user.id, now=new Date().toISOString();
+    const uuid=()=> crypto.randomUUID ? crypto.randomUUID() : "c"+Date.now()+Math.random().toString(36).slice(2);
+    const full=items.map(it=>Object.assign({ id:uuid(), user_id:uid, created_at:now, updated_at:now }, it));
+    try{
+      let { error } = await sb.from("cigars").insert(full);
+      if(error && /schema cache|does not exist/i.test(error.message||"")){
+        const core=full.map(r=>({ id:r.id, user_id:r.user_id, brand:r.brand, name:r.name, rating:r.rating, notes:r.notes, created_at:r.created_at, updated_at:r.updated_at }));
+        ({ error } = await sb.from("cigars").insert(core));
+        if(!error) toast("Imported core fields — run the latest setup SQL to store every column");
+      }
+      if(error) throw error;
+      await loadCigars();
+      toast(`Imported ${items.length} cigar${items.length>1?"s":""} ✓`);
+    }catch(err){ toast((err&&err.message)||"Couldn't import that file"); }
+  }
+
+  /* ---------------- Wish list ---------------- */
+  function openWishlist(){ const ov=$("#wishlistOverlay"); ov.classList.add("open"); ov.scrollTop=0; loadWishlist(); }
+  function closeWishlist(){ $("#wishlistOverlay").classList.remove("open"); }
+  async function loadWishlist(){
+    const box=$("#wishList"); box.innerHTML=`<div class="wish-empty">Loading…</div>`;
+    try{
+      const { data, error } = await sb.from("wishlist").select("*").order("created_at",{ascending:false});
+      if(error){
+        if(/relation .*wishlist.* does not exist|not find the table|schema cache/i.test(error.message||"")){
+          box.innerHTML=`<div class="wish-empty">🛠️ Almost ready — run <b>supabase-wishlist.sql</b> in Supabase once, then reopen this screen.</div>`; return;
+        }
+        throw error;
+      }
+      wishlist=data||[]; renderWishlist();
+    }catch(e){ box.innerHTML=`<div class="wish-empty">Couldn't load your wish list.</div>`; }
+  }
+  function renderWishlist(){
+    const box=$("#wishList");
+    if(!wishlist.length){ box.innerHTML=`<div class="wish-empty">Nothing on your wish list yet. Add a cigar above.</div>`; return; }
+    box.innerHTML=wishlist.map(w=>`<div class="wish-item" data-id="${esc(w.id)}">
+      ${w.brand?`<div class="wi-brand">${esc(w.brand)}</div>`:""}
+      <div class="wi-name">${esc(w.name)||esc(w.brand)||"A cigar"}</div>
+      ${w.note?`<div class="wi-note">${esc(w.note)}</div>`:""}
+      ${w.target_price?`<div class="wi-price">Target: ${esc(w.target_price)}</div>`:""}
+      <div class="wi-actions">
+        <button class="wi-got" data-got="${esc(w.id)}">✓ Got it</button>
+        <button class="wi-remove" data-del="${esc(w.id)}">✕ Remove</button>
+      </div>
+    </div>`).join("");
+  }
+  async function addWish(){
+    const brand=$("#w_brand").value.trim(), name=$("#w_name").value.trim();
+    const note=$("#w_note").value.trim(), target_price=$("#w_price").value.trim();
+    if(!brand && !name){ toast("Enter a brand or name first"); return; }
+    const btn=$("#wishAddBtn"); btn.disabled=true; btn.textContent="Adding…";
+    try{
+      const { error } = await sb.from("wishlist").insert({ user_id:session.user.id, brand, name, note, target_price });
+      if(error) throw error;
+      ["w_brand","w_name","w_note","w_price"].forEach(id=>{ $("#"+id).value=""; });
+      await loadWishlist(); toast("Added to wish list ★");
+    }catch(err){ toast((err&&err.message)||"Couldn't add that"); }
+    finally{ btn.disabled=false; btn.textContent="★ Add to wish list"; }
+  }
+  async function removeWish(id){
+    try{ const { error } = await sb.from("wishlist").delete().eq("id",id); if(error) throw error;
+      wishlist=wishlist.filter(w=>w.id!==id); renderWishlist();
+    }catch(err){ toast((err&&err.message)||"Couldn't remove that"); }
+  }
+  function gotWish(id){
+    const w=wishlist.find(x=>x.id===id); if(!w) return;
+    removeWish(id);
+    closeWishlist();
+    openEditor(null);
+    $("#f_brand").value=w.brand||"";
+    $("#f_name").value=w.name||"";
+    toast("Fill in the details and save it to your log");
   }
   function about(){
     alert(
@@ -1843,7 +2020,16 @@
   $("#menuBtn").addEventListener("click",e=>{ e.stopPropagation(); menuPop.classList.toggle("open"); });
   document.addEventListener("click",()=>menuPop.classList.remove("open"));
   menuPop.addEventListener("click",e=>e.stopPropagation());
+  $("#wishBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); openWishlist(); });
+  $("#wishClose").addEventListener("click",closeWishlist);
+  $("#wishAddBtn").addEventListener("click",addWish);
+  $("#wishList").addEventListener("click",e=>{
+    const got=e.target.closest("[data-got]"); if(got){ gotWish(got.getAttribute("data-got")); return; }
+    const del=e.target.closest("[data-del]"); if(del){ removeWish(del.getAttribute("data-del")); }
+  });
   $("#exportBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); exportLog(); });
+  $("#importBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); pickImport(); });
+  $("#importFile").addEventListener("change",handleImportFile);
   $("#installBtn").addEventListener("click",()=>{ menuPop.classList.remove("open"); triggerInstall(); });
   $("#installBarGo").addEventListener("click",triggerInstall);
   $("#installBarX").addEventListener("click",dismissInstallBar);
